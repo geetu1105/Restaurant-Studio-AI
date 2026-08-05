@@ -1,0 +1,11 @@
+{
+  "name": "restaurant-studio-ai",
+  "version": "1.0.0",
+  "description": "Start to End Restaurant Studio - a single-page app for students to build restaurant concepts with AI agents.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "",
+  "license": "MIT"
+}

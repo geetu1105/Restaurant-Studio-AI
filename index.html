@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Start to End Restaurant Studio</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, system-ui, sans-serif;
+      background: #f9fafb;
+      color: #111827;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    .page { max-width: 960px; margin: 0 auto; padding: 24px; }
+    header { margin-bottom: 24px; }
+    h1 { margin: 0 0 12px; font-size: clamp(2rem, 3vw, 3rem); line-height: 1.05; }
+    p.lead { margin: 0; color: #4b5563; max-width: 720px; }
+    .status, .error-box { background: #fff; border: 1px solid #d1d5db; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
+    .status strong, .error-box strong { display: block; margin-bottom: 8px; }
+    .error-box { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
+    .button-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+    button { border: none; border-radius: 999px; padding: 12px 18px; cursor: pointer; font-weight: 600; transition: transform .1s ease, box-shadow .15s ease; }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .65; cursor: not-allowed; transform: none; }
+    .primary { background: #2563eb; color: white; box-shadow: 0 18px 40px rgba(37,99,235,.18); }
+    .secondary { background: #e5e7eb; color: #111827; }
+    .secondary:hover { background: #d1d5db; }
+    .list-card { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 18px; }
+    .ideas-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+    .ideas-list button { width: 100%; text-align: left; background: #f8fafc; border: 1px solid #d1d5db; padding: 16px; border-radius: 16px; color: #111827; }
+    .ideas-list button:hover { border-color: #93c5fd; background: #eff6ff; }
+    .section { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 18px; margin-bottom: 18px; }
+    .section h2 { margin-top: 0; font-size: 1.15rem; }
+    .section p, .section pre { margin: 0.75rem 0 0; white-space: pre-wrap; line-height: 1.65; }
+    .text-field { width: 100%; min-height: 96px; resize: vertical; padding: 14px 16px; border-radius: 16px; border: 1px solid #d1d5db; font: inherit; line-height: 1.6; }
+    .text-field:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(59,130,246,.12); }
+    .copy-success { color: #16a34a; margin-left: 12px; }
+    .final-concept pre { background: #f8fafc; border-radius: 16px; padding: 18px; white-space: pre-wrap; }
+    .small-note { color: #6b7280; font-size: 0.95rem; margin-top: 10px; }
+    @media (max-width: 720px) { .button-row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Start to End Restaurant Studio</h1>
+      <p class="lead">Build a restaurant concept from idea to final review with three friendly AI teammates. Approve each handoff and keep every step. Perfect for students ages 8–18.</p>
+    </header>
+
+    <div id="status" class="status" hidden></div>
+    <div id="error" class="error-box" hidden></div>
+
+    <main id="app"></main>
+  </div>
+
+  <script>
+    const CLASSROOM_PROXY = '/classroom-proxy';
+    const app = document.getElementById('app');
+    const statusEl = document.getElementById('status');
+    const errorEl = document.getElementById('error');
+
+    let currentStage = 'ideas';
+    let ideas = [];
+    let selectedIdea = null;
+    let restaurantConcept = null;
+    let officialConcept = null;
+    let reviewResult = null;
+    let activeAgent = null;
+    let lastAgentError = null;
+
+    function setStatus(message) {
+      if (!message) {
+        statusEl.hidden = true;
+        statusEl.textContent = '';
+        return;
+      }
+      statusEl.hidden = false;
+      statusEl.innerHTML = `<strong>${message}</strong>`;
+    }
+
+    function setError(message, retryFn) {
+      if (!message) {
+        errorEl.hidden = true;
+        errorEl.innerHTML = '';
+        lastAgentError = null;
+        return;
+      }
+      lastAgentError = retryFn;
+      errorEl.hidden = false;
+      const retryButton = retryFn ? `<button class="primary" onclick="retryAgent()">Retry</button>` : '';
+      errorEl.innerHTML = `<strong>Error</strong><div>${escapeHtml(message)}</div><div class="button-row" style="margin-top:14px;">${retryButton}</div>`;
+    }
+
+    function escapeHtml(value) {
+      return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    async function askAgentPersona(persona, instructions, payload) {
+      activeAgent = persona;
+      setError(null, null);
+      setStatus(`${persona} is thinking. ${instructions.description}`);
+      try {
+        const body = {
+          persona,
+          instructions: instructions.prompt,
+          payload,
+        };
+        const response = await fetch(CLASSROOM_PROXY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(errorText || `Proxy returned status ${response.status}`);
+        }
+        const data = await response.json();
+        if (!data || typeof data.text !== 'string') {
+          throw new Error('Unexpected proxy response format.');
+        }
+        return data.text.trim();
+      } catch (error) {
+        throw new Error(error.message || 'Unknown request error');
+      } finally {
+        activeAgent = null;
+        setStatus('');
+      }
+    }
+
+    function retryAgent() {
+      if (typeof lastAgentError === 'function') {
+        lastAgentError();
+      }
+    }
+
+    function render() {
+      setError(null, null);
+      if (currentStage === 'ideas') {
+        renderIdeas();
+      } else if (currentStage === 'design') {
+        renderDesign();
+      } else if (currentStage === 'approve') {
+        renderApproval();
+      } else if (currentStage === 'final') {
+        renderFinal();
+      }
+    }
+
+    function renderIdeas() {
+      app.innerHTML = `
+        <section class="section list-card">
+          <h2>Restaurant Ideas</h2>
+          <p>Pick one idea to send to the restaurant designer. You can ask for more ideas any time.</p>
+          ${ideas.length ? `<ul class="ideas-list">${ideas.map((idea, index) => `
+            <li>
+              <button type="button" data-index="${index}">
+                <strong>${escapeHtml(idea.name)}</strong><br>
+                <em>${escapeHtml(idea.theme)}</em><br>
+                <span>${escapeHtml(idea.why)}</span>
+              </button>
+            </li>`).join('')}</ul>` : '<p>Waiting for restaurant ideas to arrive...</p>'}
+          <div class="button-row">
+            <button class="secondary" id="moreIdeasBtn">More Ideas</button>
+          </div>
+        </section>
+      `;
+      document.getElementById('moreIdeasBtn').addEventListener('click', fetchIdeas);
+      app.querySelectorAll('.ideas-list button').forEach(button => {
+        button.addEventListener('click', () => {
+          const index = Number(button.dataset.index);
+          selectIdea(index);
+        });
+      });
+    }
+
+    function renderDesign() {
+      const plan = restaurantConcept || officialConcept;
+      const chosenIdea = selectedIdea ? `${selectedIdea.name} — ${selectedIdea.theme}` : 'Selected restaurant idea';
+      app.innerHTML = `
+        <section class="section">
+          <h2>Your Restaurant Concept</h2>
+          <p>This is the complete concept from the designer. Edit any section and save it before approval.</p>
+          <p><strong>Based on:</strong> ${escapeHtml(chosenIdea)}</p>
+          <div id="conceptSections"></div>
+          <div class="button-row">
+            <button class="secondary" id="editConceptBtn">Edit Draft Draft</button>
+            <button class="primary" id="saveConceptBtn">Save official version</button>
+          </div>
+          <div class="small-note">After saving, approve to send the concept to the reviewer.</div>
+        </section>
+      `;
+      renderConceptSections(plan, false);
+      document.getElementById('editConceptBtn').addEventListener('click', () => renderConceptSections(plan, true));
+      document.getElementById('saveConceptBtn').addEventListener('click', saveEditedConcept);
+    }
+
+    function renderConceptSections(plan, editing) {
+      const container = document.getElementById('conceptSections');
+      const fields = [
+        { key: 'theme', title: 'Restaurant Theme' },
+        { key: 'menu', title: 'Menu Items' },
+        { key: 'drinks', title: 'Drinks' },
+        { key: 'desserts', title: 'Desserts' },
+        { key: 'decorations', title: 'Decorations' },
+        { key: 'colors', title: 'Colors' },
+        { key: 'layout', title: 'Layout' },
+        { key: 'customerExperience', title: 'Customer Experience' },
+        { key: 'specialFeatures', title: 'Special Features' },
+        { key: 'logoIdea', title: 'Logo Idea' },
+        { key: 'slogan', title: 'Slogan' }
+      ];
+      container.innerHTML = fields.map(field => {
+        const value = plan[field.key] || '';
+        if (editing) {
+          return `
+            <section class="section">
+              <h2>${field.title}</h2>
+              <textarea class="text-field" data-field="${field.key}">${escapeHtml(value)}</textarea>
+            </section>`;
+        }
+        return `
+          <section class="section">
+            <h2>${field.title}</h2>
+            <p>${escapeHtml(value)}</p>
+          </section>`;
+      }).join('');
+      if (editing) {
+        container.querySelectorAll('textarea').forEach(textarea => {
+          autoGrow(textarea);
+          textarea.addEventListener('input', () => autoGrow(textarea));
+        });
+      }
+    }
+
+    function autoGrow(textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+
+    function saveEditedConcept() {
+      const textareas = app.querySelectorAll('textarea[data-field]');
+      if (!textareas.length) {
+        setError('Open Edit mode before saving.', null);
+        return;
+      }
+      const updated = {};
+      textareas.forEach(textarea => {
+        updated[textarea.dataset.field] = textarea.value.trim();
+      });
+      officialConcept = { ...restaurantConcept, ...updated };
+      restaurantConcept = officialConcept;
+      currentStage = 'approve';
+      render();
+    }
+
+    function renderApproval() {
+      app.innerHTML = `
+        <section class="section">
+          <h2>Ready for Final Review</h2>
+          <p>Review the official restaurant concept and send it to the reviewer when you are ready.</p>
+          <div class="section"><pre>${escapeHtml(formatOfficialConcept(officialConcept))}</pre></div>
+          <div class="button-row">
+            <button class="secondary" id="backToEditBtn">Back to Edit</button>
+            <button class="primary" id="approveBtn">Approve and Review</button>
+          </div>
+        </section>
+      `;
+      document.getElementById('backToEditBtn').addEventListener('click', () => {
+        currentStage = 'design';
+        render();
+      });
+      document.getElementById('approveBtn').addEventListener('click', fetchReview);
+    }
+
+    function formatOfficialConcept(plan) {
+      return [
+        `Theme: ${plan.theme || ''}`,
+        `Menu Items: ${plan.menu || ''}`,
+        `Drinks: ${plan.drinks || ''}`,
+        `Desserts: ${plan.desserts || ''}`,
+        `Decorations: ${plan.decorations || ''}`,
+        `Colors: ${plan.colors || ''}`,
+        `Layout: ${plan.layout || ''}`,
+        `Customer Experience: ${plan.customerExperience || ''}`,
+        `Special Features: ${plan.specialFeatures || ''}`,
+        `Logo Idea: ${plan.logoIdea || ''}`,
+        `Slogan: ${plan.slogan || ''}`
+      ].join('\n\n');
+    }
+
+    function renderFinal() {
+      app.innerHTML = `
+        <section class="section final-concept">
+          <h2>Final Restaurant Concept</h2>
+          <p>The reviewer improved your concept and explained how to make it even better.</p>
+          <div class="section"><h3>Reviewer Critique</h3><pre>${escapeHtml(reviewResult.critique)}</pre></div>
+          <div class="section"><h3>Improved Final Restaurant Concept</h3><pre>${escapeHtml(reviewResult.improved)}</pre></div>
+          <div class="button-row">
+            <button class="primary" id="copyBtn">Copy Final Concept</button>
+            <button class="secondary" id="newRestaurantBtn">Start a New Restaurant</button>
+          </div>
+          <div id="copySuccess" class="copy-success" hidden>Copied to clipboard!</div>
+        </section>
+      `;
+      document.getElementById('copyBtn').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(`Final Restaurant Concept\n\nCritique:\n${reviewResult.critique}\n\nImproved Restaurant Concept:\n${reviewResult.improved}`);
+          const successEl = document.getElementById('copySuccess');
+          successEl.hidden = false;
+          setTimeout(() => { successEl.hidden = true; }, 2500);
+        } catch (err) {
+          setError('Unable to copy. Please use your browser copy shortcut.', null);
+        }
+      });
+      document.getElementById('newRestaurantBtn').addEventListener('click', () => {
+        ideas = [];
+        selectedIdea = null;
+        restaurantConcept = null;
+        officialConcept = null;
+        reviewResult = null;
+        currentStage = 'ideas';
+        fetchIdeas();
+      });
+    }
+
+    function selectIdea(index) {
+      selectedIdea = ideas[index];
+      fetchDesign(selectedIdea);
+    }
+
+    async function fetchIdeas() {
+      const persona = 'Agent 1: Restaurant Idea Generator';
+      const instructions = {
+        description: 'Generating five fun restaurant concepts for students aged 8–18.',
+        prompt: `You are a creative restaurant brainstorming partner who helps students create exciting restaurant ideas. Every response must be safe and appropriate for ages 8–18. Generate exactly 5 restaurant concepts. Return only valid JSON with an array of objects. Each object must include: name, theme, why. Example format: [{"name": "...", "theme": "...", "why": "..."}]. Do not include any extra text.`
+      };
+      try {
+        const text = await askAgentPersona(persona, instructions, { stage: 'ideas' });
+        ideas = parseAgent1(text);
+        currentStage = 'ideas';
+        render();
+      } catch (error) {
+        setError(error.message, fetchIdeas);
+      }
+    }
+
+    function parseAgent1(text) {
+      try {
+        const parsed = JSON.parse(text);
+        if (!Array.isArray(parsed) || parsed.length !== 5) {
+          throw new Error('Agent 1 response did not contain exactly 5 ideas.');
+        }
+        return parsed.map(item => ({
+          name: String(item.name || '').trim(),
+          theme: String(item.theme || '').trim(),
+          why: String(item.why || '').trim(),
+        }));
+      } catch (err) {
+        throw new Error('Could not read the restaurant ideas. Make sure the proxy output is valid JSON.');
+      }
+    }
+
+    async function fetchDesign(idea) {
+      const persona = 'Agent 2: Restaurant Designer';
+      const instructions = {
+        description: 'Transforming the approved idea into a complete restaurant concept.',
+        prompt: `You are a creative restaurant designer who turns an approved idea into a complete restaurant concept. Read the selected idea and return only the restaurant concept. Use the following plain text format with headings: Theme:, Menu Items:, Drinks:, Desserts:, Decorations:, Colors:, Layout:, Customer Experience:, Special Features:, Logo Idea:, Slogan:. Do not include any extra explanation.`
+      };
+      try {
+        const text = await askAgentPersona(persona, instructions, { stage: 'design', idea });
+        restaurantConcept = parseAgent2(text);
+        officialConcept = { ...restaurantConcept };
+        currentStage = 'design';
+        render();
+      } catch (error) {
+        setError(error.message, () => fetchDesign(idea));
+      }
+    }
+
+    function parseAgent2(text) {
+      const sections = {
+        theme: '', menu: '', drinks: '', desserts: '', decorations: '', colors: '', layout: '', customerExperience: '', specialFeatures: '', logoIdea: '', slogan: ''
+      };
+      const headingMap = {
+        'theme': 'theme',
+        'menu items': 'menu',
+        'drinks': 'drinks',
+        'desserts': 'desserts',
+        'decorations': 'decorations',
+        'colors': 'colors',
+        'layout': 'layout',
+        'customer experience': 'customerExperience',
+        'special features': 'specialFeatures',
+        'logo idea': 'logoIdea',
+        'slogan': 'slogan',
+      };
+      const lines = text.split(/\r?\n/);
+      let currentKey = null;
+      for (let raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+        const match = line.match(/^([A-Za-z ]+):\s*(.*)$/);
+        if (match && headingMap[match[1].trim().toLowerCase()]) {
+          currentKey = headingMap[match[1].trim().toLowerCase()];
+          sections[currentKey] = match[2] ? `${match[2].trim()}` : '';
+          continue;
+        }
+        if (currentKey) {
+          sections[currentKey] += (sections[currentKey] ? '\n' : '') + line;
+        }
+      }
+      return sections;
+    }
+
+    async function fetchReview() {
+      if (!officialConcept) {
+        setError('There is no official concept to review yet.', null);
+        return;
+      }
+      const persona = 'Agent 3: Restaurant Reviewer';
+      const instructions = {
+        description: 'Reviewing the finished restaurant concept with clear, encouraging feedback.',
+        prompt: `You are a strict but encouraging restaurant expert. Read the approved restaurant concept and return two sections. First, a short bullet-point critique labeled Critique:, with each bullet explaining exactly what an 8–18 year old student can improve. Second, an improved final restaurant version labeled Improved Restaurant Concept:. Never use sarcasm. Return only those two sections in plain text.`
+      };
+      try {
+        const text = await askAgentPersona(persona, instructions, { stage: 'review', concept: officialConcept });
+        reviewResult = parseAgent3(text);
+        currentStage = 'final';
+        render();
+      } catch (error) {
+        setError(error.message, fetchReview);
+      }
+    }
+
+    function parseAgent3(text) {
+      const critiqueMatch = text.match(/Critique:\s*([\s\S]*?)(?:\n\s*Improved Restaurant Concept:|\n\s*Improved final restaurant version:|$)/i);
+      const improvedMatch = text.match(/Improved Restaurant Concept:\s*([\s\S]*?)$/i);
+      const critique = critiqueMatch ? critiqueMatch[1].trim() : '';
+      const improved = improvedMatch ? improvedMatch[1].trim() : text.trim();
+      return { critique, improved };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      render();
+      fetchIdeas();
+    });
+  </script>
+</body>
+</html>
