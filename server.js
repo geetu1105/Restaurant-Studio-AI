@@ -67,33 +67,40 @@ function parseJsonBody(req) {
 }
 
 function buildIdeaResponse() {
-  return JSON.stringify(sampleIdeas, null, 2);
+  return JSON.stringify(sampleIdeas);
 }
 
 function buildDesignResponse(idea) {
   const name = idea?.name || 'Cozy Corner Café';
   const theme = idea?.theme || 'A friendly, imaginative restaurant for young guests';
-  return `Theme: ${theme}
-
-Menu Items: Mini burger sliders with star-shaped cheese, build-your-own pizza bites, colorful veggie wraps, and a surprise snack box.
-
-Drinks: Fizzy fruit spritzers, rainbow lemonade, hot chocolate with marshmallow clouds, and sparkling berry water.
-
-Desserts: Chocolate pudding cups, cookie sandwiches, soft-serve swirl cones, and magic sprinkle cupcakes.
-
-Decorations: Bright wall murals, playful table tents, hanging lanterns, and fun restaurant name banners.
-
-Colors: Pastel blues, warm oranges, sunny yellows, and soft greens.
-
-Layout: A welcoming dining area with family tables, a cozy corner for storytelling, and a creative craft station.
-
-Customer Experience: Friendly staff greet guests by name, help them choose their meal, and offer games while they wait.
-
-Special Features: A themed photo wall, interactive menu puzzles, and a surprise daily treat for kids.
-
-Logo Idea: A smiling fork and spoon holding a colorful plate with the restaurant name above.
-
-Slogan: "Taste the fun in every bite!"`;
+  // Return the exact schema expected by the client for Agent 2
+  const response = {
+    restaurantName: name,
+    theme: theme,
+    colors: ['Pastel blue', 'Sunny yellow', 'Mint green'],
+    decorations: ['Wall murals', 'Hanging lanterns', 'Table tents'],
+    menu: [
+      { name: 'Star Sliders', category: 'Main', description: 'Mini burgers with star-shaped cheese' },
+      { name: 'Rainbow Pizza Bites', category: 'Main', description: 'Build-your-own mini pizza bites' },
+      { name: 'Fizzy Fruit Spritzer', category: 'Drinks', description: 'Sparkling fruit drink' },
+      { name: 'Magic Sprinkle Cupcake', category: 'Dessert', description: 'Cupcake with colorful sprinkles' }
+    ],
+    recipes: [
+      {
+        name: 'Star Sliders',
+        ingredients: ['Mini buns', 'Ground beef or veggie patty', 'Star-shaped cheese', 'Lettuce', 'Ketchup'],
+        steps: ['Cook patties until done', 'Assemble on mini buns', 'Add star cheese on top', 'Serve with a side of colorful chips'],
+        presentation: 'Serve on a small wooden board with a tiny flag.'
+      },
+      {
+        name: 'Fizzy Fruit Spritzer',
+        ingredients: ['Sparkling water', 'Mixed fruit syrup', 'Ice', 'Lemon slice'],
+        steps: ['Add ice to glass', 'Pour syrup', 'Top with sparkling water', 'Garnish with lemon'],
+        presentation: 'Serve in a clear cup with a colorful straw.'
+      }
+    ]
+  };
+  return JSON.stringify(response);
 }
 
 function buildReviewResponse(concept) {
