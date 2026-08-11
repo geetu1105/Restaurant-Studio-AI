@@ -5,38 +5,43 @@ const path = require('path');
 const PORT = process.env.PORT || 8000;
 const PUBLIC_DIR = __dirname;
 
-const sampleIdeas = [
+const ideaDeck = [
   {
-    name: 'Adventure Arcade Café',
-    theme: 'A playful video game and treasure hunt restaurant',
-    why: 'Customers love the bright arcade games, treasure-themed snacks, and fun challenges with every meal.'
+    restaurantName: 'Galaxy Taco Lab',
+    theme: 'A space-station restaurant where kids build cosmic tacos',
+    foodStyle: 'Tacos, bowls, and colorful space snacks',
+    whyCustomersWouldLoveIt: 'Customers love assembling starry tacos, glowing drinks, and a futuristic atmosphere that feels like a mission to Mars.'
   },
   {
-    name: 'Rainbow Garden Diner',
-    theme: 'A colorful garden restaurant with friendly plant characters',
-    why: 'Kids enjoy the rainbow food, cute decorations, and the happy garden atmosphere.'
+    restaurantName: 'Rainbow Noodle Garden',
+    theme: 'A cheerful garden restaurant with twisty noodle bowls and bright colors',
+    foodStyle: 'Noodle bowls, dumplings, and fresh fruit drinks',
+    whyCustomersWouldLoveIt: 'Families enjoy the calm garden vibe, playful noodle shapes, and colorful food that looks as fun as it tastes.'
   },
   {
-    name: 'Rocket Taco Station',
-    theme: 'A space travel taco restaurant for young explorers',
-    why: 'Customers love the rocket-shaped tacos, cosmic drinks, and playful astronaut theme.'
+    restaurantName: 'Burger Bot Workshop',
+    theme: 'A robot-themed burger restaurant with build-your-own meals',
+    foodStyle: 'Burgers, fries, milkshakes, and snack boxes',
+    whyCustomersWouldLoveIt: 'Guests can build custom meals, watch the robot mascot, and feel like they are inside a friendly invention lab.'
   },
   {
-    name: 'Mystery Forest Café',
-    theme: 'A magical forest restaurant with storytelling meals',
-    why: 'Families enjoy the enchanted desserts and the cozy woodland decorations that feel like a storybook.'
+    restaurantName: 'Pancake Planet Café',
+    theme: 'A breakfast planet filled with pancake adventures',
+    foodStyle: 'Pancakes, waffles, smoothies, and sweet toppings',
+    whyCustomersWouldLoveIt: 'Customers love making pancake stacks with fun toppings and exploring a playful planet full of breakfast surprises.'
   },
   {
-    name: 'Pancake Planet',
-    theme: 'A breakfast planet full of sweet and savory pancake creations',
-    why: 'Guests love creating their own pancake worlds and sharing fun, colorful toppings.'
+    restaurantName: 'Mystery Forest Kitchen',
+    theme: 'A storybook forest restaurant with hidden treats and magical meals',
+    foodStyle: 'Sandwiches, soups, dessert jars, and herbal drinks',
+    whyCustomersWouldLoveIt: 'The cozy forest decorations and surprise treats make every visit feel like stepping into a friendly fairy tale.'
   }
 ];
 
 function sendJson(res, status, payload) {
   const body = JSON.stringify(payload);
   res.writeHead(status, {
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(body, 'utf8'),
   });
   res.end(body);
@@ -56,9 +61,8 @@ function parseJsonBody(req) {
     req.on('data', chunk => { body += chunk; });
     req.on('end', () => {
       try {
-        const parsed = JSON.parse(body || '{}');
-        resolve(parsed);
-      } catch (error) {
+        resolve(JSON.parse(body || '{}'));
+      } catch {
         reject(new Error('Invalid JSON body'));
       }
     });
@@ -66,94 +70,124 @@ function parseJsonBody(req) {
   });
 }
 
-function buildIdeaResponse() {
-  return JSON.stringify(sampleIdeas);
+function normalizeIdeaSource(payload) {
+  return payload?.idea || payload?.selectedIdea || ideaDeck[0];
 }
 
-function buildDesignResponse(idea) {
-  const name = idea?.name || 'Cozy Corner Café';
-  const theme = idea?.theme || 'A friendly, imaginative restaurant for young guests';
-  // Return the exact schema expected by the client for Agent 2
-  const response = {
+function buildIdeaResponse() {
+  return ideaDeck;
+}
+
+function buildDesignResponse(payload) {
+  const idea = normalizeIdeaSource(payload);
+  const name = idea.restaurantName || idea.name || 'Creative Kitchen Club';
+  const theme = idea.theme || 'A fun, colorful restaurant made for creative young chefs';
+  return {
     restaurantName: name,
-    theme: theme,
-    colors: ['Pastel blue', 'Sunny yellow', 'Mint green'],
-    decorations: ['Wall murals', 'Hanging lanterns', 'Table tents'],
-    menu: [
-      { name: 'Star Sliders', category: 'Main', description: 'Mini burgers with star-shaped cheese' },
-      { name: 'Rainbow Pizza Bites', category: 'Main', description: 'Build-your-own mini pizza bites' },
-      { name: 'Fizzy Fruit Spritzer', category: 'Drinks', description: 'Sparkling fruit drink' },
-      { name: 'Magic Sprinkle Cupcake', category: 'Dessert', description: 'Cupcake with colorful sprinkles' }
-    ],
+    theme,
+    colors: ['Coral sunrise', 'Mint green', 'Sunny yellow', 'Ocean blue'],
+    decorations: ['Wall murals', 'Hanging lights', 'Playful menu boards', 'Chef hats on the wall'],
+    layout: 'A front greeting area, an open cook station, family tables, and a tasting corner for recipe reveals.',
+    mascot: 'A smiling chef star named Tippy',
+    specialFeatures: 'Build-your-own meal bar, secret ingredient unlocks, recipe sticker rewards, and a photo wall for customer reactions.',
+    customerExperience: 'Friendly chefs greet every guest, help them choose food, and celebrate when a recipe is completed.',
+    menu: {
+      mainDishes: ['Star Sliders', 'Rainbow Noodle Bowls', 'Crunchy Taco Bites', 'Mini Pizza Clouds'],
+      drinks: ['Galaxy Lemonade', 'Berry Sparkle Soda', 'Honey Milkshake', 'Tropical Fruit Splash'],
+      desserts: ['Sprinkle Cupcakes', 'Cookie Sandwiches', 'Chocolate Pudding Jars', 'Fruit Sundae Swirls'],
+      signatureFoodItems: ['Chef Tippy Special', 'Build-Your-Own Dream Plate', 'Mystery Snack Box']
+    },
     recipes: [
       {
-        name: 'Star Sliders',
-        ingredients: ['Mini buns', 'Ground beef or veggie patty', 'Star-shaped cheese', 'Lettuce', 'Ketchup'],
-        steps: ['Cook patties until done', 'Assemble on mini buns', 'Add star cheese on top', 'Serve with a side of colorful chips'],
-        presentation: 'Serve on a small wooden board with a tiny flag.'
+        foodName: 'Galaxy Lemonade',
+        ingredients: ['Lemon juice', 'Sparkling water', 'Honey', 'Blueberry syrup', 'Ice'],
+        cookingSteps: ['Fill a cup with ice.', 'Pour in lemon juice and honey.', 'Add sparkling water.', 'Stir in blueberry syrup for a galaxy swirl.', 'Serve cold with a bright straw.'],
+        presentationIdea: 'Serve in a clear cup with a lemon wheel and a tiny paper star.',
+        tools: ['Pitcher', 'Stirrer', 'Measuring cup'],
+        decorationOptions: ['Lemon slice', 'Mint leaf', 'Blue sugar rim']
       },
       {
-        name: 'Fizzy Fruit Spritzer',
-        ingredients: ['Sparkling water', 'Mixed fruit syrup', 'Ice', 'Lemon slice'],
-        steps: ['Add ice to glass', 'Pour syrup', 'Top with sparkling water', 'Garnish with lemon'],
-        presentation: 'Serve in a clear cup with a colorful straw.'
+        foodName: 'Star Sliders',
+        ingredients: ['Mini buns', 'Burger patties', 'Cheese stars', 'Lettuce', 'Tomato'],
+        cookingSteps: ['Cook the patties.', 'Warm the buns.', 'Layer lettuce, tomato, and patty.', 'Add a cheese star on top.', 'Serve with fries or veggie sticks.'],
+        presentationIdea: 'Stack two sliders on a tray with a tiny flag in the middle.',
+        tools: ['Spatula', 'Serving tray', 'Plate'],
+        decorationOptions: ['Tiny flag', 'Sesame seeds', 'Ketchup swirl']
+      },
+      {
+        foodName: 'Sprinkle Cupcakes',
+        ingredients: ['Cupcakes', 'Vanilla frosting', 'Rainbow sprinkles', 'Berry jam', 'Whipped cream'],
+        cookingSteps: ['Bake or choose ready cupcakes.', 'Spread frosting on top.', 'Add berry jam in the center.', 'Cover with sprinkles.', 'Top with whipped cream if wanted.'],
+        presentationIdea: 'Place on a bright plate with colorful candy confetti around it.',
+        tools: ['Frosting knife', 'Bowl', 'Piping bag'],
+        decorationOptions: ['Rainbow sprinkles', 'Tiny fruit pieces', 'Chocolate drizzle']
       }
     ]
   };
-  return JSON.stringify(response);
 }
 
-function buildReviewResponse(concept) {
-  return `Critique:
-- Make the menu items easier to imagine by adding one or two fun details that explain what makes them special.
-- Add one more colorful drink idea so the restaurant feels exciting for guests ages 8 to 18.
-- Explain one special feature in a way that students can picture it clearly and understand why it makes the restaurant memorable.
-
-Improved Restaurant Concept:
-Theme: ${concept.theme || 'A magical, kid-friendly restaurant with a bright and welcoming theme.'}
-
-Menu Items: Serve mini burger sliders with star-shaped cheese, build-your-own pizza bites with colorful veggies, rainbow noodle cups, and surprise snack boxes with crunchy and sweet treats.
-
-Drinks: Offer fizzy fruit spritzers, rainbow lemonade, hot chocolate with marshmallow clouds, sparkling berry water, and a bright tropical smoothie.
-
-Desserts: Include chocolate pudding cups with cookie toppings, cookie sandwiches, soft-serve swirl cones, and magic sprinkle cupcakes.
-
-Decorations: Use bright murals, playful table tents, hanging lanterns, and a large banner with the restaurant name and characters.
-
-Colors: Combine pastel blues, warm oranges, sunny yellows, and soft greens for a cheerful atmosphere.
-
-Layout: Create a welcoming dining area with family tables, a cozy corner for storytelling, and a small craft station for kids.
-
-Customer Experience: Have friendly staff welcome guests, help them choose their meal, and offer a game or activity while they wait.
-
-Special Features: Add a themed photo wall, interactive menu puzzles, and a surprise daily treat to make each visit feel special.
-
-Logo Idea: Draw a smiling fork and spoon holding a colorful plate with the restaurant name above.
-
-Slogan: "Taste the fun in every bite!"`;
+function buildReviewResponse(payload) {
+  const concept = payload?.concept || {};
+  const recipeCount = Array.isArray(concept.recipes) ? concept.recipes.length : 0;
+  return {
+    critique: [
+      'What is great: the restaurant idea is playful, colorful, and easy for students to imagine.',
+      'What could improve: the menu should name a few more signature foods so customers can remember the restaurant faster.',
+      'What customers would enjoy more: adding one more clear decoration idea or mascot action would make the experience feel even more alive.'
+    ],
+    improved: {
+      restaurantName: concept.restaurantName || 'Creative Kitchen Club',
+      theme: concept.theme || 'A bright, friendly restaurant where kids can cook, build, and share fun meals',
+      colors: concept.colors || ['Coral sunrise', 'Mint green', 'Sunny yellow', 'Ocean blue'],
+      decorations: concept.decorations || ['Wall murals', 'Menu lights', 'Photo wall', 'Chef star banners'],
+      layout: concept.layout || 'A front greeting area, an open cook station, family tables, and a recipe showcase wall.',
+      mascot: concept.mascot || 'Chef Tippy the smiling star chef',
+      specialFeatures: concept.specialFeatures || 'Recipe stickers, secret ingredient unlocks, and customer reaction cards.',
+      customerExperience: concept.customerExperience || 'Guests pick a dish, watch it come together, and cheer when their meal is finished.',
+      menu: concept.menu || {
+        mainDishes: ['Star Sliders', 'Rainbow Noodle Bowls', 'Mini Pizza Clouds'],
+        drinks: ['Galaxy Lemonade', 'Berry Sparkle Soda'],
+        desserts: ['Sprinkle Cupcakes', 'Chocolate Pudding Jars'],
+        signatureFoodItems: ['Chef Tippy Special', 'Build-Your-Own Dream Plate']
+      },
+      recipes: Array.isArray(concept.recipes) && recipeCount
+        ? concept.recipes
+        : [
+            {
+              foodName: 'Galaxy Lemonade',
+              ingredients: ['Lemon juice', 'Sparkling water', 'Honey', 'Blueberry syrup', 'Ice'],
+              cookingSteps: ['Fill a cup with ice.', 'Pour in lemon juice and honey.', 'Add sparkling water.', 'Stir in blueberry syrup.', 'Serve cold.'],
+              presentationIdea: 'Serve in a clear cup with a lemon wheel and a tiny paper star.',
+              tools: ['Pitcher', 'Stirrer', 'Measuring cup'],
+              decorationOptions: ['Lemon slice', 'Mint leaf', 'Blue sugar rim']
+            }
+          ]
+    }
+  };
 }
 
 function serveStaticFile(req, res) {
-  let filePath = req.url === '/' ? '/index.html' : req.url;
-  const resolvedPath = path.join(PUBLIC_DIR, filePath);
+  const safePath = req.url === '/' ? '/index.html' : req.url;
+  const resolvedPath = path.join(PUBLIC_DIR, safePath);
   if (!resolvedPath.startsWith(PUBLIC_DIR)) {
     sendText(res, 403, 'Forbidden');
     return;
   }
-  fs.readFile(resolvedPath, (err, data) => {
-    if (err) {
+  fs.readFile(resolvedPath, (error, data) => {
+    if (error) {
       sendText(res, 404, 'Not found');
       return;
     }
-    const mime = resolvedPath.endsWith('.html') ? 'text/html' : 'text/plain';
-    res.writeHead(200, { 'Content-Type': `${mime}; charset=utf-8` });
+    const contentType = resolvedPath.endsWith('.html') ? 'text/html' : 'text/plain';
+    res.writeHead(200, { 'Content-Type': `${contentType}; charset=utf-8` });
     res.end(data);
   });
 }
 
 const server = http.createServer(async (req, res) => {
   if (req.method === 'GET') {
-    return serveStaticFile(req, res);
+    serveStaticFile(req, res);
+    return;
   }
 
   if (req.method === 'POST' && req.url === '/classroom-proxy') {
@@ -162,21 +196,26 @@ const server = http.createServer(async (req, res) => {
       const persona = String(body.persona || '').toLowerCase();
       const payload = body.payload || {};
 
-      if (persona.includes('restaurant idea generator')) {
-        return sendJson(res, 200, { text: buildIdeaResponse() });
+      if (persona.includes('restaurant brainstorming partner')) {
+        sendJson(res, 200, { text: JSON.stringify(buildIdeaResponse()) });
+        return;
       }
 
-      if (persona.includes('restaurant designer')) {
-        return sendJson(res, 200, { text: buildDesignResponse(payload.idea) });
+      if (persona.includes('creative chef and restaurant designer')) {
+        sendJson(res, 200, { text: JSON.stringify(buildDesignResponse(payload)) });
+        return;
       }
 
-      if (persona.includes('restaurant reviewer')) {
-        return sendJson(res, 200, { text: buildReviewResponse(payload.concept || {}) });
+      if (persona.includes('strict but encouraging professional chef')) {
+        sendJson(res, 200, { text: JSON.stringify(buildReviewResponse(payload)) });
+        return;
       }
 
-      return sendJson(res, 400, { text: 'Unknown persona.' });
+      sendJson(res, 400, { text: 'Unknown persona.' });
+      return;
     } catch (error) {
-      return sendJson(res, 400, { text: error.message });
+      sendJson(res, 400, { text: error.message });
+      return;
     }
   }
 

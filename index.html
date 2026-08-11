@@ -7,94 +7,311 @@
   <style>
     :root {
       color-scheme: light;
-      font-family: Inter, system-ui, sans-serif;
-      background: #f9fafb;
-      color: #111827;
+      --bg: #fff8ef;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --text: #1f2937;
+      --muted: #5b6472;
+      --accent: #ef6c3f;
+      --accent-2: #12b5a6;
+      --accent-3: #6c5ce7;
+      --good: #15803d;
+      --warn: #b45309;
+      --border: rgba(31, 41, 55, 0.08);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
     }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; }
-    .page { max-width: 960px; margin: 0 auto; padding: 24px; }
-    header { margin-bottom: 24px; }
-    h1 { margin: 0 0 12px; font-size: clamp(2rem, 3vw, 3rem); line-height: 1.05; }
-    p.lead { margin: 0; color: #4b5563; max-width: 720px; }
-    .status, .error-box { background: #fff; border: 1px solid #d1d5db; border-radius: 16px; padding: 16px; margin-bottom: 20px; }
-    .status strong, .error-box strong { display: block; margin-bottom: 8px; }
-    .error-box { border-color: #fca5a5; background: #fef2f2; color: #991b1b; }
-    .button-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
-    button { border: none; border-radius: 999px; padding: 12px 18px; cursor: pointer; font-weight: 600; transition: transform .1s ease, box-shadow .15s ease; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(239, 108, 63, 0.18), transparent 32%),
+        radial-gradient(circle at top right, rgba(18, 181, 166, 0.16), transparent 30%),
+        linear-gradient(180deg, #fffdf8 0%, var(--bg) 100%);
+    }
+    .shell { max-width: 1240px; margin: 0 auto; padding: 24px; }
+    .hero {
+      background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,248,239,0.96));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 22px 60px rgba(31, 41, 55, 0.08);
+      overflow: hidden;
+      position: relative;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -60px -80px auto;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(239,108,63,0.18), transparent 70%);
+      pointer-events: none;
+    }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 999px; background: rgba(239, 108, 63, 0.12); color: #c2410c; font-weight: 700; font-size: 0.88rem; }
+    h1 { margin: 14px 0 10px; font-size: clamp(2.1rem, 5vw, 4.3rem); line-height: 0.95; letter-spacing: -0.04em; }
+    .lead { margin: 0; max-width: 900px; color: var(--muted); font-size: 1.02rem; line-height: 1.7; }
+    .meta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+    .pill { padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.82); border: 1px solid var(--border); font-size: 0.9rem; font-weight: 650; color: #374151; }
+    .status, .error {
+      margin-top: 18px;
+      border-radius: 22px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: 0 18px 36px rgba(31, 41, 55, 0.06);
+    }
+    .status strong, .error strong { display: block; margin-bottom: 6px; font-size: 1rem; }
+    .status { border-left: 6px solid var(--accent-2); }
+    .error { border-left: 6px solid #dc2626; background: #fff6f6; }
+    .grid { display: grid; gap: 18px; margin-top: 18px; }
+    .dashboard { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+    .card, .panel, .idea-card, .recipe-card, .reaction-card {
+      background: var(--panel-strong);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 18px 42px rgba(31, 41, 55, 0.06);
+    }
+    .card { padding: 16px 18px; min-height: 104px; }
+    .card h3, .panel h2, .panel h3, .idea-card h3, .recipe-card h3 { margin: 0 0 8px; }
+    .card .value { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.03em; }
+    .card .label { color: var(--muted); font-size: 0.9rem; margin-top: 6px; }
+    .panel { padding: 20px; }
+    .toolbar, .button-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.14s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
     button:hover { transform: translateY(-1px); }
-    button:disabled { opacity: .65; cursor: not-allowed; transform: none; }
-    .primary { background: #2563eb; color: white; box-shadow: 0 18px 40px rgba(37,99,235,.18); }
-    .secondary { background: #e5e7eb; color: #111827; }
-    .secondary:hover { background: #d1d5db; }
-    .list-card { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 18px; }
-    .ideas-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
-    .ideas-list button { width: 100%; text-align: left; background: #f8fafc; border: 1px solid #d1d5db; padding: 16px; border-radius: 16px; color: #111827; }
-    .ideas-list button:hover { border-color: #93c5fd; background: #eff6ff; }
-    .section { background: white; border: 1px solid #e5e7eb; border-radius: 18px; padding: 18px; margin-bottom: 18px; }
-    .section h2 { margin-top: 0; font-size: 1.15rem; }
-    .section p, .section pre { margin: 0.75rem 0 0; white-space: pre-wrap; line-height: 1.65; }
-    .text-field { width: 100%; min-height: 96px; resize: vertical; padding: 14px 16px; border-radius: 16px; border: 1px solid #d1d5db; font: inherit; line-height: 1.6; }
-    .text-field:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 4px rgba(59,130,246,.12); }
-    .copy-success { color: #16a34a; margin-left: 12px; }
-    .final-concept pre { background: #f8fafc; border-radius: 16px; padding: 18px; white-space: pre-wrap; }
-    .small-note { color: #6b7280; font-size: 0.95rem; margin-top: 10px; }
-    @media (max-width: 720px) { .button-row { flex-direction: column; } }
+    button:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
+    .primary { color: #fff; background: linear-gradient(135deg, var(--accent), #ff8a4c); box-shadow: 0 14px 28px rgba(239,108,63,0.24); }
+    .secondary { color: #111827; background: #eef2f7; }
+    .secondary:hover { background: #e2e8f0; }
+    .ghost { color: var(--accent-3); background: rgba(108, 92, 231, 0.08); }
+    .ideas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ideas-list { display: grid; gap: 14px; }
+    .idea-card {
+      width: 100%;
+      text-align: left;
+      padding: 18px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .idea-card::after {
+      content: "";
+      position: absolute;
+      inset: auto -30px -30px auto;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(18,181,166,0.18), transparent 68%);
+    }
+    .idea-card.active { outline: 3px solid rgba(239,108,63,0.26); box-shadow: 0 16px 38px rgba(239,108,63,0.14); }
+    .idea-card small { color: var(--muted); }
+    .section-stack { display: grid; gap: 16px; }
+    .field-grid { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .field, .recipe-field { display: grid; gap: 8px; }
+    .field label, .recipe-field label { font-weight: 700; color: #374151; }
+    textarea {
+      width: 100%;
+      resize: none;
+      min-height: 52px;
+      border-radius: 18px;
+      border: 1px solid #d8dee8;
+      padding: 14px 14px;
+      font: inherit;
+      line-height: 1.55;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: rgba(239,108,63,0.56);
+      box-shadow: 0 0 0 4px rgba(239,108,63,0.12);
+    }
+    .text-block {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      color: #27313f;
+      padding: 2px 0;
+    }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+    .section-title p { margin: 0; color: var(--muted); }
+    .menu-grid, .recipe-grid, .reaction-grid { display: grid; gap: 14px; }
+    .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recipe-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .reaction-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #f6f7fb;
+      border: 1px solid #e6e9f2;
+      color: #334155;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+    .chip.good { background: rgba(21, 128, 61, 0.10); border-color: rgba(21, 128, 61, 0.16); color: var(--good); }
+    .chip.warn { background: rgba(180, 83, 9, 0.10); border-color: rgba(180, 83, 9, 0.16); color: var(--warn); }
+    .recipe-card { padding: 16px; display: grid; gap: 12px; }
+    .recipe-card.completed { outline: 3px solid rgba(21, 128, 61, 0.18); }
+    .recipe-card h3 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .workbench { display: grid; gap: 12px; grid-template-columns: 1.1fr 0.9fr; }
+    .bank, .zone, .plate {
+      border-radius: 18px;
+      border: 1px dashed #cfd6e4;
+      background: linear-gradient(180deg, #fbfcfe, #f8fafc);
+      padding: 12px;
+      min-height: 90px;
+    }
+    .zone { min-height: 120px; }
+    .drop-title { font-size: 0.88rem; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+    .object-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .draggable {
+      user-select: none;
+      -webkit-user-drag: element;
+      cursor: grab;
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font: inherit;
+      font-weight: 700;
+      background: rgba(18,181,166,0.11);
+      color: #0f766e;
+    }
+    .draggable.tool { background: rgba(108,92,231,0.10); color: #4c3dd9; }
+    .placed-list { display: flex; flex-wrap: wrap; gap: 8px; min-height: 32px; }
+    .placed-item { background: rgba(239,108,63,0.10); color: #b45309; border: 1px solid rgba(239,108,63,0.14); }
+    .plate-area {
+      border: 1px solid rgba(239,108,63,0.18);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #fffdfb, #fff6f0);
+      padding: 12px;
+      min-height: 84px;
+    }
+    .meter {
+      height: 12px;
+      border-radius: 999px;
+      background: #edf1f7;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .meter > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent-2), var(--accent));
+    }
+    .small-note, .tiny { color: var(--muted); font-size: 0.92rem; line-height: 1.55; }
+    .tiny { font-size: 0.84rem; }
+    .scoreboard { display: grid; gap: 12px; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .score-box { padding: 14px; border-radius: 18px; background: #fff; border: 1px solid var(--border); }
+    .score-box strong { display: block; font-size: 1.15rem; margin-top: 4px; }
+    .approval-box { display: grid; gap: 16px; grid-template-columns: 1.1fr 0.9fr; }
+    .copy-box { white-space: pre-wrap; background: #fbfcfe; border: 1px solid var(--border); border-radius: 18px; padding: 14px; }
+    .recipe-book { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recipe-book .chip { justify-content: center; }
+    .hidden { display: none !important; }
+    @media (max-width: 1080px) {
+      .dashboard, .scoreboard, .approval-box, .workbench, .reaction-grid, .recipe-book, .menu-grid, .recipe-grid, .ideas, .field-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 720px) {
+      .shell { padding: 14px; }
+      .hero { padding: 20px; border-radius: 22px; }
+      .panel, .card, .idea-card, .recipe-card { border-radius: 18px; }
+    }
   </style>
 </head>
 <body>
-  <div class="page">
-    <header>
-      <h1>Start to End Restaurant Studio</h1>
-      <p class="lead">Build a restaurant concept from idea to final review with three friendly AI teammates. Approve each handoff and keep every step. Perfect for students ages 8–18.</p>
-    </header>
+  <div class="shell">
+    <section class="hero">
+      <div class="eyebrow">🍽️ Start to End Restaurant Studio</div>
+      <h1>Build a restaurant, cook the menu, and level up your creativity.</h1>
+      <p class="lead">Students ages 8–18 move through a playful restaurant tycoon, cooking game, and AI creative studio. Every handoff is student-approved, every agent uses the same proxy-powered async function, and every step stays fun, colorful, and interactive.</p>
+      <div class="meta-row">
+        <div class="pill">Three AI agents</div>
+        <div class="pill">Drag-and-drop cooking</div>
+        <div class="pill">Recipe book + chef levels</div>
+        <div class="pill">Approve every handoff</div>
+      </div>
+    </section>
 
-    <div id="status" class="status" hidden></div>
-    <div id="error" class="error-box" hidden></div>
+    <section id="status" class="status hidden"></section>
+    <section id="error" class="error hidden"></section>
 
-    <main id="app"></main>
+    <section id="dashboard" class="grid dashboard"></section>
+    <main id="app" class="grid" style="margin-top:18px;"></main>
   </div>
 
   <script>
     const CLASSROOM_PROXY = '/classroom-proxy';
     const app = document.getElementById('app');
+    const dashboard = document.getElementById('dashboard');
     const statusEl = document.getElementById('status');
     const errorEl = document.getElementById('error');
 
-    let currentStage = 'ideas';
-    let ideas = [];
-    let selectedIdea = null;
-    let restaurantConcept = null;
-    let officialConcept = null;
-    let reviewResult = null;
-    let activeAgent = null;
-    let lastAgentError = null;
+    const state = {
+      stage: 'ideas',
+      busy: null,
+      error: null,
+      ideas: [],
+      selectedIdea: null,
+      draft: null,
+      official: null,
+      review: null,
+      editMode: false,
+      chefXp: 0,
+      chefLevel: 1,
+      creativityScore: 0,
+      recipeBook: [],
+      unlockedIngredients: new Set(['Water', 'Salt']),
+      unlockedDecorations: new Set(),
+      customerReactions: [],
+      progress: {},
+      retry: null,
+    };
 
-    function setStatus(message) {
-      if (!message) {
-        statusEl.hidden = true;
-        statusEl.textContent = '';
-        return;
-      }
-      statusEl.hidden = false;
-      statusEl.innerHTML = `<strong>${message}</strong>`;
+    const agentMeta = {
+      ideas: {
+        label: 'Restaurant Idea Generator',
+        message: 'creating new restaurant ideas...',
+        persona: 'A creative restaurant brainstorming partner who helps students imagine exciting restaurant concepts.',
+      },
+      design: {
+        label: 'Chef Builder',
+        message: 'designing your menu, recipes, and kitchen...',
+        persona: 'A creative chef and restaurant designer who turns an idea into a complete restaurant experience.',
+      },
+      review: {
+        label: 'Chef Critic',
+        message: 'reviewing your restaurant and recipes...',
+        persona: 'A strict but encouraging professional chef and restaurant expert.',
+      },
+    };
+
+    function deepClone(value) {
+      return JSON.parse(JSON.stringify(value));
     }
 
-    function setError(message, retryFn) {
-      if (!message) {
-        errorEl.hidden = true;
-        errorEl.innerHTML = '';
-        lastAgentError = null;
-        return;
-      }
-      lastAgentError = retryFn;
-      errorEl.hidden = false;
-      const retryButton = retryFn ? `<button class="primary" onclick="retryAgent()">Retry</button>` : '';
-      errorEl.innerHTML = `<strong>Error</strong><div>${escapeHtml(message)}</div><div class="button-row" style="margin-top:14px;">${retryButton}</div>`;
+    function slugify(value) {
+      return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'recipe';
     }
 
     function escapeHtml(value) {
-      return value
+      return String(value ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -102,177 +319,521 @@
         .replace(/'/g, '&#39;');
     }
 
-    async function askAgentPersona(persona, instructions, payload) {
-      activeAgent = persona;
-      setError(null, null);
-      setStatus(`${persona} is working: ${instructions.description}`);
+    function toLines(value) {
+      if (Array.isArray(value)) return value.map(item => String(item).trim()).filter(Boolean);
+      return String(value || '').split(/\r?\n/).map(item => item.trim()).filter(Boolean);
+    }
+
+    function linesToText(value) {
+      return Array.isArray(value) ? value.join('\n') : String(value || '');
+    }
+
+    function normalizeIdea(item) {
+      return {
+        restaurantName: String(item.restaurantName || item.name || '').trim(),
+        theme: String(item.theme || '').trim(),
+        foodStyle: String(item.foodStyle || item.style || '').trim(),
+        whyCustomersWouldLoveIt: String(item.whyCustomersWouldLoveIt || item.why || '').trim(),
+      };
+    }
+
+    function normalizeDraft(raw, fallbackIdea) {
+      const source = raw?.design ? { ...raw.design, menu: raw.menu, recipes: raw.recipes } : raw || {};
+      const menu = source.menu || {};
+      const recipes = Array.isArray(source.recipes) ? source.recipes : [];
+      return {
+        restaurantName: String(source.restaurantName || fallbackIdea?.restaurantName || '').trim(),
+        theme: String(source.theme || fallbackIdea?.theme || '').trim(),
+        colors: linesToText(source.colors || []),
+        decorations: linesToText(source.decorations || []),
+        layout: String(source.layout || '').trim(),
+        mascot: String(source.mascot || '').trim(),
+        specialFeatures: String(source.specialFeatures || '').trim(),
+        customerExperience: String(source.customerExperience || '').trim(),
+        menu: {
+          mainDishes: linesToText(menu.mainDishes || source.mainDishes || []),
+          drinks: linesToText(menu.drinks || source.drinks || []),
+          desserts: linesToText(menu.desserts || source.desserts || []),
+          signatureFoodItems: linesToText(menu.signatureFoodItems || source.signatureFoodItems || []),
+        },
+        recipes: recipes.map((recipe, index) => ({
+          foodName: String(recipe.foodName || recipe.name || `Recipe ${index + 1}`).trim(),
+          ingredients: toLines(recipe.ingredients),
+          cookingSteps: toLines(recipe.cookingSteps || recipe.steps),
+          presentationIdea: String(recipe.presentationIdea || recipe.presentation || '').trim(),
+          tools: toLines(recipe.tools),
+          decorationOptions: toLines(recipe.decorationOptions),
+        })),
+      };
+    }
+
+    function normalizeReview(raw) {
+      const critique = Array.isArray(raw?.critique)
+        ? raw.critique.map(item => String(item).trim()).filter(Boolean)
+        : toLines(raw?.critique || raw?.feedback || '');
+      return {
+        critique,
+        improved: normalizeDraft(raw?.improved || raw?.finalRestaurant || raw?.restaurant || raw?.concept || {}),
+      };
+    }
+
+    function tryParseJson(text) {
+      if (typeof text !== 'string') return text;
+      const trimmed = text.trim();
+      if (!trimmed) return trimmed;
+      if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) return text;
       try {
-        const body = {
-          persona,
-          instructions: instructions.prompt,
-          payload,
+        return JSON.parse(trimmed);
+      } catch {
+        return text;
+      }
+    }
+
+    function setBusy(agentKey) {
+      state.busy = {
+        label: agentMeta[agentKey].label,
+        message: agentMeta[agentKey].message,
+      };
+      renderStatus();
+    }
+
+    function clearBusy() {
+      state.busy = null;
+      renderStatus();
+    }
+
+    function setError(message, retry) {
+      state.error = message ? { message, retry } : null;
+      state.retry = retry || null;
+      renderError();
+    }
+
+    function renderStatus() {
+      if (!state.busy) {
+        statusEl.classList.add('hidden');
+        statusEl.innerHTML = '';
+        return;
+      }
+      statusEl.classList.remove('hidden');
+      statusEl.innerHTML = `<strong>${escapeHtml(state.busy.label)} is working</strong><div>${escapeHtml(state.busy.message)}</div>`;
+    }
+
+    function renderError() {
+      if (!state.error) {
+        errorEl.classList.add('hidden');
+        errorEl.innerHTML = '';
+        return;
+      }
+      errorEl.classList.remove('hidden');
+      errorEl.innerHTML = `
+        <strong>Something went wrong</strong>
+        <div>${escapeHtml(state.error.message)}</div>
+        <div class="button-row" style="margin-top:12px;">
+          <button class="primary" id="retryBtn">Retry</button>
+        </div>
+      `;
+      const retryBtn = document.getElementById('retryBtn');
+      if (retryBtn) {
+        retryBtn.onclick = () => {
+          if (typeof state.error.retry === 'function') state.error.retry();
         };
+      }
+    }
+
+    async function askAgentPersona(persona, instructions, payload, agentKey) {
+      setBusy(agentKey);
+      setError(null, null);
+      try {
         const response = await fetch(CLASSROOM_PROXY, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ persona, instructions, payload }),
         });
         if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(errorText || `Proxy returned status ${response.status}`);
+          const text = await response.text();
+          throw new Error(text || `Proxy returned status ${response.status}`);
         }
         const data = await response.json();
-        if (!data) throw new Error('Empty proxy response');
-        // proxy returns { text: '...json...' }
-        const raw = typeof data.text === 'string' ? data.text.trim() : data.text;
-        // Try to parse JSON safely and return parsed object when possible
-        if (typeof raw === 'string') {
-          try {
-            return JSON.parse(raw);
-          } catch (e) {
-            // not JSON, return raw string so callers can attempt parsing
-            return raw;
-          }
-        }
-        return raw;
+        const parsed = tryParseJson(typeof data.text === 'string' ? data.text : JSON.stringify(data.text));
+        return parsed;
       } catch (error) {
         throw new Error(error.message || 'Unknown request error');
       } finally {
-        activeAgent = null;
-        setStatus('');
+        clearBusy();
       }
     }
 
-    function retryAgent() {
-      if (typeof lastAgentError === 'function') {
-        lastAgentError();
-      }
+    function stageProgressPercent() {
+      const base = { ideas: 12, design: 45, approval: 74, final: 100 }[state.stage] || 12;
+      return Math.min(100, base + state.recipeBook.length * 4);
+    }
+
+    function dashboardHtml() {
+      const ideaCount = state.ideas.length || 5;
+      return `
+        <article class="card">
+          <div class="label">Chef Level</div>
+          <div class="value">${state.chefLevel}</div>
+          <div class="label">Level up by completing recipes</div>
+        </article>
+        <article class="card">
+          <div class="label">Creativity Score</div>
+          <div class="value">${state.creativityScore}</div>
+          <div class="label">A mix of cooking, design, and originality</div>
+        </article>
+        <article class="card">
+          <div class="label">Recipe Book</div>
+          <div class="value">${state.recipeBook.length}</div>
+          <div class="label">Unlocked recipes saved</div>
+        </article>
+        <article class="card">
+          <div class="label">Unlocked Ingredients</div>
+          <div class="value">${state.unlockedIngredients.size}</div>
+          <div class="label">${state.unlockedIngredients.size ? Array.from(state.unlockedIngredients).slice(0, 3).join(', ') : 'None yet'}</div>
+        </article>
+        <article class="card">
+          <div class="label">Restaurant Progress</div>
+          <div class="value">${Math.round(stageProgressPercent())}%</div>
+          <div class="meter"><span style="width:${stageProgressPercent()}%"></span></div>
+        </article>
+        <article class="card">
+          <div class="label">Idea Deck</div>
+          <div class="value">${ideaCount}</div>
+          <div class="label">Fun concept cards in your stack</div>
+        </article>
+      `;
+    }
+
+    function renderDashboard() {
+      dashboard.innerHTML = dashboardHtml();
     }
 
     function render() {
-      setError(null, null);
-      if (currentStage === 'ideas') {
-        renderIdeas();
-      } else if (currentStage === 'design') {
-        renderDesign();
-      } else if (currentStage === 'approve') {
-        renderApproval();
-      } else if (currentStage === 'final') {
-        renderFinal();
-      }
+      renderDashboard();
+      renderStatus();
+      renderError();
+      if (state.stage === 'ideas') renderIdeasStage();
+      if (state.stage === 'design') renderDesignStage();
+      if (state.stage === 'approval') renderApprovalStage();
+      if (state.stage === 'final') renderFinalStage();
     }
 
-    function renderIdeas() {
+    function renderIdeasStage() {
       app.innerHTML = `
-        <section class="section list-card">
-          <h2>Restaurant Ideas</h2>
-          <p>Pick one idea to send to the restaurant designer. You can ask for more ideas any time.</p>
-          ${ideas.length ? `<ul class="ideas-list">${ideas.map((idea, index) => `
-            <li>
-              <button type="button" data-index="${index}">
-                <strong>${escapeHtml(idea.name)}</strong><br>
-                <em>${escapeHtml(idea.theme)}</em><br>
-                <span>${escapeHtml(idea.why)}</span>
-              </button>
-            </li>`).join('')}</ul>` : '<p>Waiting for restaurant ideas to arrive...</p>'}
-          <div class="button-row">
-            <button class="secondary" id="moreIdeasBtn">More Ideas</button>
-          </div>
-        </section>
-      `;
-      document.getElementById('moreIdeasBtn').addEventListener('click', fetchIdeas);
-      app.querySelectorAll('.ideas-list button').forEach(button => {
-        button.addEventListener('click', () => {
-          const index = Number(button.dataset.index);
-          selectIdea(index);
-        });
-      });
-    }
-
-    function renderDesign() {
-      const plan = restaurantConcept || officialConcept || { design: {}, menu: [], recipes: [] };
-      const chosenIdea = selectedIdea ? `${selectedIdea.name} — ${selectedIdea.theme}` : 'Selected restaurant idea';
-      app.innerHTML = `
-        <section class="section">
-          <h2>Your Restaurant Concept</h2>
-          <p>This is the complete concept from the designer. Edit any section and save it before approval.</p>
-          <p><strong>Based on:</strong> ${escapeHtml(chosenIdea)}</p>
-          <div id="conceptSections"></div>
-          <div class="button-row">
-            <button class="secondary" id="editConceptBtn">Edit Draft</button>
-            <button class="primary" id="saveConceptBtn">Save official version</button>
-            <button class="secondary" id="openKitchenBtn">Open Cooking Game</button>
-          </div>
-          <div class="small-note">After saving, approve to send the concept to the reviewer.</div>
-        </section>
-        <section id="kitchenSection" class="section" style="display:none;">
-          <h2>Interactive Cooking Game</h2>
-          <div id="kitchenArea"></div>
-        </section>
-      `;
-      renderConceptSections(plan, false);
-      document.getElementById('editConceptBtn').addEventListener('click', () => renderConceptSections(plan, true));
-      document.getElementById('saveConceptBtn').addEventListener('click', saveEditedConcept);
-      document.getElementById('openKitchenBtn').addEventListener('click', () => {
-        document.getElementById('kitchenSection').style.display = '';
-        renderKitchen(plan.recipes || []);
-      });
-    }
-
-    function renderConceptSections(plan, editing) {
-      const container = document.getElementById('conceptSections');
-      const fields = [
-        { key: 'theme', title: 'Restaurant Theme' },
-        { key: 'decorations', title: 'Decorations' },
-        { key: 'colors', title: 'Colors' },
-        { key: 'layout', title: 'Layout' },
-        { key: 'mascot', title: 'Mascot' },
-        { key: 'specialFeatures', title: 'Special Features' },
-        { key: 'customerExperience', title: 'Customer Experience' }
-      ];
-      container.innerHTML = fields.map(field => {
-        const value = (plan.design && plan.design[field.key]) || plan[field.key] || '';
-        if (editing) {
-          return `
-            <section class="section">
-              <h2>${field.title}</h2>
-              <textarea class="text-field" data-field="${field.key}">${escapeHtml(value)}</textarea>
-            </section>`;
-        }
-        return `
-          <section class="section">
-            <h2>${field.title}</h2>
-            <p>${escapeHtml(value)}</p>
-          </section>`;
-      }).join('') + renderMenuAndRecipes(plan);
-      if (editing) {
-        container.querySelectorAll('textarea').forEach(textarea => {
-          autoGrow(textarea);
-          textarea.addEventListener('input', () => autoGrow(textarea));
-        });
-      }
-    }
-
-    function renderMenuAndRecipes(plan) {
-      const menu = plan.menu || (plan.design && plan.design.menu) || [];
-      const recipes = plan.recipes || [];
-      const menuHtml = `
-        <section class="section">
-          <h2>Menu</h2>
-          <ul>${menu.map(item => `<li><strong>${escapeHtml(item.name)}</strong> — ${escapeHtml(item.description || item.category || '')}</li>`).join('')}</ul>
-        </section>`;
-      const recipesHtml = `
-        <section class="section">
-          <h2>Recipes</h2>
-          <div>${recipes.map((r, i) => `
-            <div style="margin-bottom:12px;">
-              <strong>${escapeHtml(r.name)}</strong>
-              <div>${escapeHtml((r.ingredients || []).join(', '))}</div>
-              <div style="margin-top:6px;"><em>Steps:</em><pre>${escapeHtml((r.steps || []).join('\n'))}</pre></div>
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Restaurant Idea Generator</h2>
+              <p>Pick a concept to start your restaurant and cooking adventure.</p>
             </div>
-          `).join('')}</div>
-        </section>`;
-      return menuHtml + recipesHtml;
+            <div class="toolbar">
+              <button class="secondary" id="moreIdeasBtn">More Ideas</button>
+            </div>
+          </div>
+          <div id="ideasGrid" class="grid ideas"></div>
+        </section>
+      `;
+      const ideasGrid = document.getElementById('ideasGrid');
+      ideasGrid.innerHTML = state.ideas.length
+        ? state.ideas.map((idea, index) => `
+          <button class="idea-card ${state.selectedIdea && state.selectedIdea.restaurantName === idea.restaurantName ? 'active' : ''}" data-idea-index="${index}">
+            <h3>${escapeHtml(idea.restaurantName)}</h3>
+            <div class="chip-row">
+              <span class="chip">Theme: ${escapeHtml(idea.theme)}</span>
+              <span class="chip">Food: ${escapeHtml(idea.foodStyle)}</span>
+            </div>
+            <p class="small-note" style="margin-top:12px;">${escapeHtml(idea.whyCustomersWouldLoveIt)}</p>
+          </button>
+        `).join('')
+        : '<div class="small-note">Waiting for ideas to load...</div>';
+      document.getElementById('moreIdeasBtn').onclick = fetchIdeas;
+      ideasGrid.querySelectorAll('[data-idea-index]').forEach(button => {
+        button.onclick = () => selectIdea(Number(button.dataset.ideaIndex));
+      });
+    }
+
+    function renderDesignStage() {
+      const draft = state.editMode ? state.draft : state.official;
+      app.innerHTML = `
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Chef Builder Studio</h2>
+              <p>Edit your restaurant, create recipes, and play the cooking game.</p>
+            </div>
+            <div class="toolbar">
+              <button class="secondary" id="toggleEditBtn">${state.editMode ? 'Close Edit Mode' : 'Edit Draft'}</button>
+              <button class="primary" id="saveDraftBtn">Save Official Version</button>
+              <button class="ghost" id="approveFromDesignBtn">Review &amp; Approve</button>
+            </div>
+          </div>
+          <div class="scoreboard">
+            <div class="score-box"><span>Selected Idea</span><strong>${escapeHtml(state.selectedIdea?.restaurantName || '')}</strong></div>
+            <div class="score-box"><span>Stage</span><strong>Building &amp; Cooking</strong></div>
+            <div class="score-box"><span>Completed Recipes</span><strong>${state.recipeBook.length}/${draft?.recipes?.length || 0}</strong></div>
+            <div class="score-box"><span>Customer Reactions</span><strong>${state.customerReactions.length}</strong></div>
+          </div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Restaurant Design</h2>
+              <p>${state.editMode ? 'Change anything you want. Saved edits become the official version.' : 'These are the current official details from Agent 2.'}</p>
+            </div>
+          </div>
+          <div id="designFields"></div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Menu Builder</h2>
+              <p>Main dishes, drinks, desserts, and signature foods.</p>
+            </div>
+          </div>
+          <div id="menuFields"></div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Recipe Creator</h2>
+              <p>Use the editable recipes and the interactive cooking game to finish your creations.</p>
+            </div>
+          </div>
+          <div id="recipeFields" class="recipe-grid"></div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Interactive Cooking Studio</h2>
+              <p>Drag ingredients and tools into the workbench, then add a decoration to complete each recipe.</p>
+            </div>
+          </div>
+          <div id="kitchenArea" class="section-stack"></div>
+        </section>
+      `;
+      renderEditableSections(draft);
+      renderKitchenStudio(draft);
+      document.getElementById('toggleEditBtn').onclick = toggleEditMode;
+      document.getElementById('saveDraftBtn').onclick = saveOfficialVersion;
+      document.getElementById('approveFromDesignBtn').onclick = moveToApproval;
+    }
+
+    function renderApprovalStage() {
+      const draft = state.official;
+      app.innerHTML = `
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Approve Your Restaurant</h2>
+              <p>Check the saved version before sending it to Chef Critic.</p>
+            </div>
+            <div class="toolbar">
+              <button class="secondary" id="backToKitchenBtn">Back to Kitchen</button>
+              <button class="primary" id="sendToCriticBtn">Send to Chef Critic</button>
+            </div>
+          </div>
+          <div class="approval-box">
+            <div class="panel" style="padding:16px;">
+              <h3>${escapeHtml(draft.restaurantName)}</h3>
+              <div class="small-note">${escapeHtml(draft.theme)}</div>
+              <div class="chip-row" style="margin-top:14px;">
+                <span class="chip">Level ${state.chefLevel}</span>
+                <span class="chip">${state.recipeBook.length} completed recipes</span>
+                <span class="chip">Creativity ${state.creativityScore}</span>
+              </div>
+              <div class="copy-box" style="margin-top:16px;">${escapeHtml(formatDraftForCopy(draft))}</div>
+            </div>
+            <div class="panel" style="padding:16px;">
+              <h3>Cooking Progress</h3>
+              <div class="tiny">Completed recipes become part of the official handoff.</div>
+              <div class="recipe-book" style="margin-top:14px;">
+                ${state.recipeBook.length ? state.recipeBook.map(item => `<span class="chip good">${escapeHtml(item)}</span>`).join('') : '<span class="tiny">No recipes completed yet.</span>'}
+              </div>
+              <div class="section-title" style="margin-top:16px;"><h3>Unlockables</h3></div>
+              <div class="chip-row">
+                ${Array.from(state.unlockedIngredients).map(item => `<span class="chip">${escapeHtml(item)}</span>`).join('')}
+              </div>
+              <div class="chip-row" style="margin-top:10px;">
+                ${Array.from(state.unlockedDecorations).map(item => `<span class="chip warn">${escapeHtml(item)}</span>`).join('') || '<span class="tiny">No decorations unlocked yet.</span>'}
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+      document.getElementById('backToKitchenBtn').onclick = () => {
+        state.stage = 'design';
+        render();
+      };
+      document.getElementById('sendToCriticBtn').onclick = fetchReview;
+    }
+
+    function renderFinalStage() {
+      const finalDraft = state.review?.improved || state.official;
+      const critique = state.review?.critique || [];
+      app.innerHTML = `
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title">
+            <div>
+              <h2>Final Restaurant Showcase</h2>
+              <p>Your restaurant, recipes, and cooking creations are ready to share.</p>
+            </div>
+            <div class="toolbar">
+              <button class="primary" id="copyBtn">Copy Final Showcase</button>
+              <button class="secondary" id="newRestaurantBtn">Start a New Restaurant</button>
+            </div>
+          </div>
+          <div class="scoreboard">
+            <div class="score-box"><span>Chef Level</span><strong>${state.chefLevel}</strong></div>
+            <div class="score-box"><span>Creativity Score</span><strong>${state.creativityScore}</strong></div>
+            <div class="score-box"><span>Completed Recipes</span><strong>${state.recipeBook.length}</strong></div>
+            <div class="score-box"><span>Customer Reactions</span><strong>${state.customerReactions.length}</strong></div>
+          </div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title"><div><h2>Final Restaurant Design</h2><p>Improved by Chef Critic.</p></div></div>
+          <div id="finalDesign"></div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title"><div><h2>Chef Critic Feedback</h2><p>Short bullet-point feedback and what to improve next.</p></div></div>
+          <div class="section-stack" id="critiqueList"></div>
+        </section>
+
+        <section class="panel" style="grid-column:1 / -1;">
+          <div class="section-title"><div><h2>Cooking Creations</h2><p>Your completed recipe cards and customer reactions.</p></div></div>
+          <div id="finalCreations"></div>
+        </section>
+      `;
+      document.getElementById('finalDesign').innerHTML = renderDraftSummary(finalDraft);
+      document.getElementById('critiqueList').innerHTML = critique.length
+        ? critique.map(item => `<div class="card"><div class="text-block">• ${escapeHtml(item)}</div></div>`).join('')
+        : '<div class="card"><div class="text-block">The critic liked your restaurant and offered a simple improvement.</div></div>';
+      document.getElementById('finalCreations').innerHTML = `
+        <div class="recipe-grid">
+          ${state.recipeBook.length ? state.recipeBook.map(name => `<div class="reaction-card"><div class="card" style="height:100%;"><h3>${escapeHtml(name)}</h3><div class="tiny">Completed in the cooking studio.</div></div></div>`).join('') : '<div class="tiny">No recipes were completed yet.</div>'}
+        </div>
+        <div class="reaction-grid" style="margin-top:16px;">
+          ${state.customerReactions.length ? state.customerReactions.map(item => `<div class="reaction-card"><div class="card"><h3>${escapeHtml(item.title)}</h3><div class="text-block">${escapeHtml(item.message)}</div></div></div>`).join('') : '<div class="tiny">No customer reactions yet.</div>'}
+        </div>
+      `;
+      document.getElementById('copyBtn').onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(formatFinalCopy());
+          alert('Final showcase copied to clipboard.');
+        } catch {
+          setError('Unable to copy right now. Please use your browser copy shortcut.', null);
+        }
+      };
+      document.getElementById('newRestaurantBtn').onclick = resetStudio;
+    }
+
+    function renderDraftSummary(draft) {
+      return `
+        <div class="field-grid">
+          <div class="card"><div class="label">Restaurant Name</div><div class="text-block">${escapeHtml(draft.restaurantName)}</div></div>
+          <div class="card"><div class="label">Theme</div><div class="text-block">${escapeHtml(draft.theme)}</div></div>
+          <div class="card"><div class="label">Colors</div><div class="text-block">${escapeHtml(draft.colors)}</div></div>
+          <div class="card"><div class="label">Mascot</div><div class="text-block">${escapeHtml(draft.mascot)}</div></div>
+          <div class="card"><div class="label">Decorations</div><div class="text-block">${escapeHtml(draft.decorations)}</div></div>
+          <div class="card"><div class="label">Layout</div><div class="text-block">${escapeHtml(draft.layout)}</div></div>
+          <div class="card"><div class="label">Special Features</div><div class="text-block">${escapeHtml(draft.specialFeatures)}</div></div>
+          <div class="card"><div class="label">Customer Experience</div><div class="text-block">${escapeHtml(draft.customerExperience)}</div></div>
+        </div>
+        <div class="menu-grid" style="margin-top:14px;">
+          <div class="card"><div class="label">Main Dishes</div><div class="text-block">${escapeHtml(linesToText(draft.menu.mainDishes))}</div></div>
+          <div class="card"><div class="label">Drinks</div><div class="text-block">${escapeHtml(linesToText(draft.menu.drinks))}</div></div>
+          <div class="card"><div class="label">Desserts</div><div class="text-block">${escapeHtml(linesToText(draft.menu.desserts))}</div></div>
+          <div class="card"><div class="label">Signature Food Items</div><div class="text-block">${escapeHtml(linesToText(draft.menu.signatureFoodItems))}</div></div>
+        </div>
+        <div class="recipe-grid" style="margin-top:14px;">
+          ${draft.recipes.map(recipe => `
+            <div class="recipe-card">
+              <h3>${escapeHtml(recipe.foodName)}</h3>
+              <div class="tiny">${escapeHtml(recipe.presentationIdea)}</div>
+              <div class="chip-row">${recipe.tools.map(tool => `<span class="chip">${escapeHtml(tool)}</span>`).join('')}</div>
+              <div class="chip-row">${recipe.decorationOptions.map(item => `<span class="chip warn">${escapeHtml(item)}</span>`).join('')}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderEditableSections(draft) {
+      const designFields = [
+        ['restaurantName', 'Restaurant Name'],
+        ['theme', 'Theme'],
+        ['colors', 'Colors'],
+        ['decorations', 'Decorations'],
+        ['layout', 'Layout'],
+        ['mascot', 'Mascot'],
+        ['specialFeatures', 'Special Features'],
+        ['customerExperience', 'Customer Experience'],
+      ];
+      const designContainer = document.getElementById('designFields');
+      const menuContainer = document.getElementById('menuFields');
+      const recipeContainer = document.getElementById('recipeFields');
+      if (state.editMode) {
+        designContainer.innerHTML = `<div class="field-grid">${designFields.map(([field, label]) => renderTextareaField(`draft.${field}`, label, draft[field])).join('')}</div>`;
+        menuContainer.innerHTML = `
+          <div class="menu-grid">
+            ${renderTextareaField('draft.menu.mainDishes', 'Main Dishes', draft.menu.mainDishes)}
+            ${renderTextareaField('draft.menu.drinks', 'Drinks', draft.menu.drinks)}
+            ${renderTextareaField('draft.menu.desserts', 'Desserts', draft.menu.desserts)}
+            ${renderTextareaField('draft.menu.signatureFoodItems', 'Signature Food Items', draft.menu.signatureFoodItems)}
+          </div>`;
+        recipeContainer.innerHTML = draft.recipes.map((recipe, index) => `
+          <div class="recipe-card">
+            <div class="section-title"><h3>Recipe ${index + 1}</h3></div>
+            <div class="recipe-field">${renderTextareaField(`draft.recipes.${index}.foodName`, 'Food Name', recipe.foodName)}</div>
+            <div class="recipe-field">${renderTextareaField(`draft.recipes.${index}.ingredients`, 'Ingredients', linesToText(recipe.ingredients))}</div>
+            <div class="recipe-field">${renderTextareaField(`draft.recipes.${index}.cookingSteps`, 'Cooking Steps', linesToText(recipe.cookingSteps))}</div>
+            <div class="recipe-field">${renderTextareaField(`draft.recipes.${index}.presentationIdea`, 'Presentation Idea', recipe.presentationIdea)}</div>
+            <div class="recipe-field">${renderTextareaField(`draft.recipes.${index}.tools`, 'Cooking Tools', linesToText(recipe.tools))}</div>
+            <div class="recipe-field">${renderTextareaField(`draft.recipes.${index}.decorationOptions`, 'Decoration Options', linesToText(recipe.decorationOptions))}</div>
+          </div>
+        `).join('');
+      } else {
+        designContainer.innerHTML = `<div class="field-grid">${designFields.map(([field, label]) => renderReadOnlyField(label, draft[field])).join('')}</div>`;
+        menuContainer.innerHTML = `
+          <div class="menu-grid">
+            ${renderReadOnlyField('Main Dishes', draft.menu.mainDishes)}
+            ${renderReadOnlyField('Drinks', draft.menu.drinks)}
+            ${renderReadOnlyField('Desserts', draft.menu.desserts)}
+            ${renderReadOnlyField('Signature Food Items', draft.menu.signatureFoodItems)}
+          </div>`;
+        recipeContainer.innerHTML = draft.recipes.map((recipe, index) => `
+          <div class="recipe-card">
+            <h3>Recipe ${index + 1}: ${escapeHtml(recipe.foodName)}</h3>
+            <div class="text-block"><strong>Ingredients</strong>\n${escapeHtml(linesToText(recipe.ingredients))}</div>
+            <div class="text-block"><strong>Steps</strong>\n${escapeHtml(linesToText(recipe.cookingSteps))}</div>
+            <div class="text-block"><strong>Presentation</strong>\n${escapeHtml(recipe.presentationIdea)}</div>
+            <div class="text-block"><strong>Tools</strong>\n${escapeHtml(linesToText(recipe.tools))}</div>
+            <div class="text-block"><strong>Decoration Options</strong>\n${escapeHtml(linesToText(recipe.decorationOptions))}</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function renderTextareaField(path, label, value) {
+      const id = path.replace(/[^a-z0-9]+/gi, '-');
+      return `
+        <div class="field">
+          <label for="${id}">${escapeHtml(label)}</label>
+          <textarea id="${id}" data-path="${escapeHtml(path)}">${escapeHtml(linesToText(value))}</textarea>
+        </div>`;
+    }
+
+    function renderReadOnlyField(label, value) {
+      return `
+        <div class="card">
+          <div class="label">${escapeHtml(label)}</div>
+          <div class="text-block">${escapeHtml(linesToText(value))}</div>
+        </div>`;
     }
 
     function autoGrow(textarea) {
@@ -280,328 +841,399 @@
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
 
-    function saveEditedConcept() {
-      const textareas = app.querySelectorAll('textarea[data-field]');
-      if (!textareas.length) {
-        setError('Open Edit mode before saving.', null);
+    function attachAutoGrow() {
+      document.querySelectorAll('textarea[data-path]').forEach(textarea => {
+        autoGrow(textarea);
+        textarea.addEventListener('input', () => autoGrow(textarea));
+      });
+    }
+
+    function readDraftFromEditor() {
+      const next = deepClone(state.official);
+      const getValue = path => {
+        const selector = `textarea[data-path="${path}"]`;
+        const el = document.querySelector(selector);
+        return el ? el.value.trim() : '';
+      };
+      next.restaurantName = getValue('draft.restaurantName');
+      next.theme = getValue('draft.theme');
+      next.colors = getValue('draft.colors');
+      next.decorations = getValue('draft.decorations');
+      next.layout = getValue('draft.layout');
+      next.mascot = getValue('draft.mascot');
+      next.specialFeatures = getValue('draft.specialFeatures');
+      next.customerExperience = getValue('draft.customerExperience');
+      next.menu.mainDishes = getValue('draft.menu.mainDishes');
+      next.menu.drinks = getValue('draft.menu.drinks');
+      next.menu.desserts = getValue('draft.menu.desserts');
+      next.menu.signatureFoodItems = getValue('draft.menu.signatureFoodItems');
+      next.recipes = next.recipes.map((recipe, index) => ({
+        foodName: getValue(`draft.recipes.${index}.foodName`),
+        ingredients: toLines(getValue(`draft.recipes.${index}.ingredients`)),
+        cookingSteps: toLines(getValue(`draft.recipes.${index}.cookingSteps`)),
+        presentationIdea: getValue(`draft.recipes.${index}.presentationIdea`),
+        tools: toLines(getValue(`draft.recipes.${index}.tools`)),
+        decorationOptions: toLines(getValue(`draft.recipes.${index}.decorationOptions`)),
+      }));
+      return next;
+    }
+
+    function toggleEditMode() {
+      state.editMode = !state.editMode;
+      render();
+      if (state.editMode) attachAutoGrow();
+    }
+
+    function saveOfficialVersion() {
+      if (!state.official) {
+        setError('No restaurant draft exists yet.', null);
         return;
       }
-      const updated = {};
-      textareas.forEach(textarea => {
-        updated[textarea.dataset.field] = textarea.value.trim();
-      });
-      officialConcept = { ...restaurantConcept, ...updated };
-      restaurantConcept = officialConcept;
-      currentStage = 'approve';
+      const saved = readDraftFromEditor();
+      state.draft = deepClone(saved);
+      state.official = deepClone(saved);
+      state.editMode = false;
+      state.stage = 'design';
+      setError(null, null);
       render();
     }
 
-    function renderApproval() {
-      app.innerHTML = `
-        <section class="section">
-          <h2>Ready for Final Review</h2>
-          <p>Review the official restaurant concept and send it to the reviewer when you are ready.</p>
-          <div class="section"><pre>${escapeHtml(formatOfficialConcept(officialConcept))}</pre></div>
-          <div class="button-row">
-            <button class="secondary" id="backToEditBtn">Back to Edit</button>
-            <button class="primary" id="approveBtn">Approve and Review</button>
-          </div>
-        </section>
-      `;
-      document.getElementById('backToEditBtn').addEventListener('click', () => {
-        currentStage = 'design';
-        render();
-      });
-      document.getElementById('approveBtn').addEventListener('click', fetchReview);
+    function moveToApproval() {
+      if (state.editMode) {
+        state.official = readDraftFromEditor();
+        state.draft = deepClone(state.official);
+        state.editMode = false;
+      }
+      state.stage = 'approval';
+      render();
     }
 
-    function formatOfficialConcept(plan) {
+    function resetRecipeProgress(recipe) {
+      const key = slugify(recipe.foodName);
+      state.progress[key] = {
+        ingredients: new Set(),
+        tools: new Set(),
+        decoration: '',
+        complete: false,
+      };
+      return key;
+    }
+
+    function getRecipeProgress(recipe) {
+      const key = slugify(recipe.foodName);
+      if (!state.progress[key]) {
+        state.progress[key] = { ingredients: new Set(), tools: new Set(), decoration: '', complete: false };
+      }
+      return state.progress[key];
+    }
+
+    function completeRecipe(recipe, progress) {
+      const key = slugify(recipe.foodName);
+      if (progress.complete) return;
+      const total = recipe.ingredients.length;
+      if (progress.ingredients.size < total || progress.tools.size === 0 || !progress.decoration) return;
+      progress.complete = true;
+      state.chefXp += 25;
+      state.creativityScore += 15 + Math.min(10, total);
+      state.chefLevel = Math.max(1, Math.floor(state.chefXp / 50) + 1);
+      if (!state.recipeBook.includes(recipe.foodName)) state.recipeBook.push(recipe.foodName);
+      recipe.ingredients.forEach(item => state.unlockedIngredients.add(item));
+      if (progress.decoration) state.unlockedDecorations.add(progress.decoration);
+      state.customerReactions.unshift(generateReaction(recipe, progress.decoration));
+      state.customerReactions = state.customerReactions.slice(0, 6);
+      render();
+    }
+
+    function generateReaction(recipe, decoration) {
+      const reactions = [
+        'Customers cheered when the plate arrived at the table.',
+        'Kids smiled because the colors looked bright and playful.',
+        'Families loved how the dish looked like a tiny celebration.',
+        'The recipe felt fun, creative, and easy to share with friends.',
+      ];
+      return {
+        title: recipe.foodName,
+        message: `${reactions[(state.customerReactions.length + recipe.foodName.length) % reactions.length]} Decoration used: ${decoration || 'none'}.`,
+      };
+    }
+
+    function renderKitchenStudio(draft) {
+      const kitchen = document.getElementById('kitchenArea');
+      if (!draft?.recipes?.length) {
+        kitchen.innerHTML = '<div class="small-note">No recipes available yet. Save your restaurant from Agent 2 first.</div>';
+        return;
+      }
+      kitchen.innerHTML = draft.recipes.map((recipe, index) => {
+        const progress = getRecipeProgress(recipe);
+        const ingredientPlaced = progress.ingredients.size;
+        const toolPlaced = progress.tools.size > 0;
+        const decorationPicked = Boolean(progress.decoration);
+        const completed = progress.complete;
+        const maxItems = recipe.ingredients.length + 1 + (decorationPicked ? 1 : 0);
+        const currentItems = ingredientPlaced + (toolPlaced ? 1 : 0) + (decorationPicked ? 1 : 0);
+        const percent = Math.round((currentItems / Math.max(1, maxItems)) * 100);
+        return `
+          <article class="recipe-card ${completed ? 'completed' : ''}" data-recipe-index="${index}">
+            <h3>
+              <span>${escapeHtml(recipe.foodName)}</span>
+              <span class="chip ${completed ? 'good' : 'warn'}">${completed ? 'Completed' : 'Cooking'}</span>
+            </h3>
+            <div class="small-note">${escapeHtml(recipe.presentationIdea || 'Create a fun plated finish for this dish.')}</div>
+            <div class="meter"><span style="width:${percent}%"></span></div>
+            <div class="workbench">
+              <div>
+                <div class="bank">
+                  <div class="drop-title">Ingredients</div>
+                  <div class="object-row">${recipe.ingredients.map((ingredient, ingredientIndex) => `
+                    <button class="draggable" draggable="true" data-kind="ingredient" data-recipe="${index}" data-value="${escapeHtml(ingredient)}" data-token="${index}-${ingredientIndex}">${escapeHtml(ingredient)}</button>
+                  `).join('')}</div>
+                </div>
+                <div style="margin-top:10px;" class="bank">
+                  <div class="drop-title">Tools</div>
+                  <div class="object-row">${recipe.tools.map((tool, toolIndex) => `
+                    <button class="draggable tool" draggable="true" data-kind="tool" data-recipe="${index}" data-value="${escapeHtml(tool)}" data-token="tool-${index}-${toolIndex}">${escapeHtml(tool)}</button>
+                  `).join('')}</div>
+                </div>
+              </div>
+              <div>
+                <div class="zone" data-zone="ingredients" data-recipe="${index}">
+                  <div class="drop-title">Mix &amp; Build</div>
+                  <div class="placed-list">${Array.from(progress.ingredients).map(item => `<span class="chip placed-item">${escapeHtml(item)}</span>`).join('')}</div>
+                </div>
+                <div class="zone" style="margin-top:10px;" data-zone="tools" data-recipe="${index}">
+                  <div class="drop-title">Use a Tool</div>
+                  <div class="placed-list">${Array.from(progress.tools).map(item => `<span class="chip">${escapeHtml(item)}</span>`).join('') || '<span class="tiny">Drop one tool here.</span>'}</div>
+                </div>
+                <div class="plate-area" style="margin-top:10px;">
+                  <div class="drop-title">Decoration Options</div>
+                  <div class="chip-row">${recipe.decorationOptions.map(option => `
+                    <button class="chip ${progress.decoration === option ? 'good' : ''}" type="button" data-decoration="${index}:${escapeHtml(option)}">${escapeHtml(option)}</button>
+                  `).join('')}</div>
+                  <div class="tiny" style="margin-top:10px;">Selected decoration: ${escapeHtml(progress.decoration || 'none yet')}</div>
+                </div>
+              </div>
+            </div>
+            <div class="chip-row">
+              <span class="chip">Progress ${ingredientPlaced}/${recipe.ingredients.length} ingredients</span>
+              <span class="chip">${toolPlaced ? 'Tool ready' : 'Need a tool'}</span>
+              <span class="chip">${decorationPicked ? 'Decorated' : 'Pick a finish'}</span>
+            </div>
+            <div class="button-row">
+              <button class="primary" data-check-recipe="${index}">Check Recipe</button>
+              <button class="secondary" data-complete-recipe="${index}">Complete Recipe</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+      attachKitchenHandlers(draft);
+    }
+
+    function attachKitchenHandlers(draft) {
+      const kitchen = document.getElementById('kitchenArea');
+      kitchen.querySelectorAll('.draggable').forEach(item => {
+        item.addEventListener('dragstart', event => {
+          event.dataTransfer.setData('text/plain', JSON.stringify({
+            kind: item.dataset.kind,
+            value: item.dataset.value,
+            recipeIndex: item.dataset.recipe,
+          }));
+        });
+      });
+      kitchen.querySelectorAll('.zone').forEach(zone => {
+        zone.addEventListener('dragover', event => event.preventDefault());
+        zone.addEventListener('drop', event => {
+          event.preventDefault();
+          const payload = tryParseJson(event.dataTransfer.getData('text/plain'));
+          if (!payload || Number(payload.recipeIndex) !== Number(zone.dataset.recipe)) return;
+          const recipe = draft.recipes[Number(zone.dataset.recipe)];
+          const progress = getRecipeProgress(recipe);
+          if (payload.kind === 'ingredient' && zone.dataset.zone === 'ingredients') {
+            if (recipe.ingredients.includes(payload.value)) progress.ingredients.add(payload.value);
+          }
+          if (payload.kind === 'tool' && zone.dataset.zone === 'tools') {
+            progress.tools.add(payload.value);
+          }
+          render();
+        });
+      });
+      kitchen.querySelectorAll('[data-decoration]').forEach(button => {
+        button.onclick = () => {
+          const [recipeIndex, option] = button.dataset.decoration.split(':');
+          const recipe = draft.recipes[Number(recipeIndex)];
+          const progress = getRecipeProgress(recipe);
+          progress.decoration = tryParseJson(JSON.stringify(option)) || option;
+          render();
+        };
+      });
+      kitchen.querySelectorAll('[data-check-recipe]').forEach(button => {
+        button.onclick = () => {
+          const recipe = draft.recipes[Number(button.dataset.checkRecipe)];
+          const progress = getRecipeProgress(recipe);
+          const matchedIngredients = progress.ingredients.size;
+          const hasTool = progress.tools.size > 0;
+          const hasDecoration = Boolean(progress.decoration);
+          if (matchedIngredients === recipe.ingredients.length && hasTool && hasDecoration) {
+            completeRecipe(recipe, progress);
+          } else {
+            setError(`Keep going on ${recipe.foodName}. You need all ingredients, one tool, and a decoration to finish it.`, null);
+          }
+        };
+      });
+      kitchen.querySelectorAll('[data-complete-recipe]').forEach(button => {
+        button.onclick = () => {
+          const recipe = draft.recipes[Number(button.dataset.completeRecipe)];
+          completeRecipe(recipe, getRecipeProgress(recipe));
+        };
+      });
+    }
+
+    function formatDraftForCopy(draft) {
       return [
-        `Theme: ${plan.theme || ''}`,
-        `Menu Items: ${plan.menu || ''}`,
-        `Drinks: ${plan.drinks || ''}`,
-        `Desserts: ${plan.desserts || ''}`,
-        `Decorations: ${plan.decorations || ''}`,
-        `Colors: ${plan.colors || ''}`,
-        `Layout: ${plan.layout || ''}`,
-        `Customer Experience: ${plan.customerExperience || ''}`,
-        `Special Features: ${plan.specialFeatures || ''}`,
-        `Logo Idea: ${plan.logoIdea || ''}`,
-        `Slogan: ${plan.slogan || ''}`
-      ].join('\n\n');
+        `Restaurant: ${draft.restaurantName}`,
+        `Theme: ${draft.theme}`,
+        `Colors: ${draft.colors}`,
+        `Decorations: ${draft.decorations}`,
+        `Layout: ${draft.layout}`,
+        `Mascot: ${draft.mascot}`,
+        `Special Features: ${draft.specialFeatures}`,
+        `Customer Experience: ${draft.customerExperience}`,
+        '',
+        `Main Dishes:\n${linesToText(draft.menu.mainDishes)}`,
+        `Drinks:\n${linesToText(draft.menu.drinks)}`,
+        `Desserts:\n${linesToText(draft.menu.desserts)}`,
+        `Signature Food Items:\n${linesToText(draft.menu.signatureFoodItems)}`,
+      ].join('\n');
     }
 
-    function renderFinal() {
-      app.innerHTML = `
-        <section class="section final-concept">
-          <h2>Final Restaurant Concept</h2>
-          <p>The reviewer improved your concept and explained how to make it even better.</p>
-          <div class="section"><h3>Reviewer Critique</h3><pre>${escapeHtml(reviewResult.critique)}</pre></div>
-          <div class="section"><h3>Improved Final Restaurant Concept</h3><pre>${escapeHtml(reviewResult.improved)}</pre></div>
-          <div class="section"><h3>Your Creations</h3>${renderMenuAndRecipes({ menu: officialConcept.menu || [], recipes: officialConcept.recipes || [] })}</div>
-          <div class="button-row">
-            <button class="primary" id="copyBtn">Copy Final Concept</button>
-            <button class="secondary" id="newRestaurantBtn">Start a New Restaurant</button>
-          </div>
-          <div id="copySuccess" class="copy-success" hidden>Copied to clipboard!</div>
-        </section>
-      `;
-      document.getElementById('copyBtn').addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(`Final Restaurant Concept\n\nCritique:\n${reviewResult.critique}\n\nImproved Restaurant Concept:\n${reviewResult.improved}`);
-          const successEl = document.getElementById('copySuccess');
-          successEl.hidden = false;
-          setTimeout(() => { successEl.hidden = true; }, 2500);
-        } catch (err) {
-          setError('Unable to copy. Please use your browser copy shortcut.', null);
-        }
-      });
-      document.getElementById('newRestaurantBtn').addEventListener('click', () => {
-        ideas = [];
-        selectedIdea = null;
-        restaurantConcept = null;
-        officialConcept = null;
-        reviewResult = null;
-        currentStage = 'ideas';
-        fetchIdeas();
-      });
+    function formatFinalCopy() {
+      const draft = state.review?.improved || state.official;
+      const critique = state.review?.critique || [];
+      return [
+        'Final Restaurant Showcase',
+        '',
+        formatDraftForCopy(draft),
+        '',
+        'Recipes',
+        ...(draft.recipes || []).map(recipe => [
+          `- ${recipe.foodName}`,
+          `  Ingredients: ${linesToText(recipe.ingredients)}`,
+          `  Steps: ${linesToText(recipe.cookingSteps)}`,
+          `  Presentation: ${recipe.presentationIdea}`,
+        ].join('\n')),
+        '',
+        'Chef Critic Feedback',
+        ...critique.map(item => `- ${item}`),
+      ].join('\n');
     }
 
-    function selectIdea(index) {
-      selectedIdea = ideas[index];
-      fetchDesign(selectedIdea);
+    function updateChefStats() {
+      state.chefLevel = Math.max(1, Math.floor(state.chefXp / 50) + 1);
     }
 
     async function fetchIdeas() {
-      const persona = 'Agent 1: Restaurant Idea Generator';
-      const instructions = {
-        description: 'Generating five fun restaurant concepts for students aged 8–18.',
-        prompt: `You are a creative restaurant brainstorming partner who helps students create exciting restaurant ideas. Every response must be safe and appropriate for ages 8–18. Generate exactly 5 restaurant concepts. Return only valid JSON with an array of objects. Each object must include: name, theme, why. Example format: [{"name": "...", "theme": "...", "why": "..."}]. Do not include any extra text.`
-      };
       try {
-        const text = await askAgentPersona(persona, instructions, { stage: 'ideas' });
-        ideas = parseAgent1(text);
-        currentStage = 'ideas';
+        const response = await askAgentPersona(
+          agentMeta.ideas.persona,
+          `Generate exactly 5 restaurant ideas for students ages 8–18. Return valid JSON only as an array of objects with restaurantName, theme, foodStyle, and whyCustomersWouldLoveIt. Keep ideas fun, safe, creative, and realistic.`,
+          { stage: 'ideas' },
+          'ideas'
+        );
+        const list = Array.isArray(response) ? response : response?.ideas || response?.restaurantIdeas || [];
+        state.ideas = list.map(normalizeIdea).slice(0, 5);
+        state.stage = 'ideas';
+        state.selectedIdea = null;
+        setError(null, null);
         render();
       } catch (error) {
         setError(error.message, fetchIdeas);
       }
     }
 
-    function parseAgent1(text) {
-      let parsed = text;
-      if (typeof text === 'string') {
-        try {
-          parsed = JSON.parse(text);
-        } catch (e) {
-          throw new Error('Could not read the restaurant ideas. Make sure the proxy output is valid JSON.');
-        }
-      }
-      if (!Array.isArray(parsed) || parsed.length !== 5) {
-        throw new Error('Agent 1 response did not contain exactly 5 ideas.');
-      }
-      return parsed.map(item => ({
-        name: String(item.name || '').trim(),
-        theme: String(item.theme || '').trim(),
-        why: String(item.why || '').trim(),
-      }));
-    }
-
-    // Game and progression state
-    let chefXP = 0;
-    let chefLevel = 1;
-    const recipeBook = [];
-    const unlocked = { ingredients: new Set(['Water', 'Salt']), decorations: new Set() };
-
     async function fetchDesign(idea) {
-      const persona = 'Agent 2: Restaurant Designer';
-      const instructions = {
-        description: 'Designing your restaurant and creating menu items with recipes (JSON output).',
-        prompt: `You are a creative chef and restaurant designer. Turn the approved idea into a complete restaurant design, menu, and recipes. Return only valid JSON with this shape: {"design": { name, theme, colors, decorations, layout, mascot, specialFeatures, customerExperience }, "menu": [{"name","category","description"}], "recipes": [{"name","ingredients":[...],"steps":[...],"presentation":"..."}] }. Keep content friendly for ages 8-18. Do not include any extra text.`
-      };
       try {
-        const text = await askAgentPersona(persona, instructions, { stage: 'design', idea });
-        restaurantConcept = parseAgent2(text);
-        // ensure basic fields
-        restaurantConcept.design = restaurantConcept.design || { name: idea.name, theme: idea.theme };
-        officialConcept = { ...restaurantConcept.design, menu: restaurantConcept.menu, recipes: restaurantConcept.recipes };
-        currentStage = 'design';
+        const response = await askAgentPersona(
+          agentMeta.design.persona,
+          `Turn the approved idea into a complete restaurant experience. Return valid JSON only with restaurantName, theme, colors, decorations, layout, mascot, specialFeatures, customerExperience, menu { mainDishes, drinks, desserts, signatureFoodItems }, and recipes [{ foodName, ingredients, cookingSteps, presentationIdea, tools, decorationOptions }].`,
+          { stage: 'design', idea },
+          'design'
+        );
+        const draft = normalizeDraft(response, idea);
+        state.draft = deepClone(draft);
+        state.official = deepClone(draft);
+        state.review = null;
+        state.editMode = false;
+        state.progress = {};
+        state.recipeBook = [];
+        state.customerReactions = [];
+        state.unlockedIngredients = new Set(['Water', 'Salt']);
+        state.unlockedDecorations = new Set();
+        state.chefXp = 0;
+        updateChefStats();
+        draft.recipes.forEach(recipe => resetRecipeProgress(recipe));
+        state.stage = 'design';
+        setError(null, null);
         render();
       } catch (error) {
         setError(error.message, () => fetchDesign(idea));
       }
     }
 
-    function parseAgent2(obj) {
-      // Accept either a JSON string or a parsed object and normalize to { design, menu, recipes }
-      let parsed = obj;
-      if (typeof obj === 'string') {
-        try {
-          parsed = JSON.parse(obj);
-        } catch (e) {
-          throw new Error('Designer response was not valid JSON.');
-        }
-      }
-      if (!parsed || typeof parsed !== 'object') {
-        throw new Error('Designer returned an unexpected response.');
-      }
-      // If the proxy returned the new schema, map to internal shape
-      if (parsed.restaurantName || parsed.theme || parsed.menu) {
-        const design = {
-          name: parsed.restaurantName || parsed.design?.name || selectedIdea?.name || '',
-          theme: parsed.theme || parsed.design?.theme || selectedIdea?.theme || '',
-          colors: Array.isArray(parsed.colors) ? parsed.colors.join(', ') : (parsed.colors || parsed.design?.colors || '').toString(),
-          decorations: Array.isArray(parsed.decorations) ? parsed.decorations.join(', ') : (parsed.decorations || parsed.design?.decorations || '').toString(),
-          layout: parsed.layout || parsed.design?.layout || '',
-          mascot: parsed.mascot || parsed.design?.mascot || '',
-          specialFeatures: Array.isArray(parsed.specialFeatures) ? parsed.specialFeatures.join(', ') : (parsed.specialFeatures || parsed.design?.specialFeatures || '').toString(),
-          customerExperience: parsed.customerExperience || parsed.design?.customerExperience || ''
-        };
-        const menu = Array.isArray(parsed.menu) ? parsed.menu : (parsed.menu || []);
-        const recipes = Array.isArray(parsed.recipes) ? parsed.recipes : (parsed.recipes || []);
-        return { design, menu, recipes };
-      }
-      // Fallback: if agent returned { design, menu, recipes }
-      if (parsed.design) {
-        const menu = Array.isArray(parsed.menu) ? parsed.menu : [];
-        const recipes = Array.isArray(parsed.recipes) ? parsed.recipes : [];
-        return { design: parsed.design, menu, recipes };
-      }
-      throw new Error('Designer output missing required fields (restaurantName/theme/menu/recipes).');
-    }
-
     async function fetchReview() {
-      if (!officialConcept) {
-        setError('There is no official concept to review yet.', null);
+      if (!state.official) {
+        setError('There is no approved restaurant yet.', null);
         return;
       }
-      const persona = 'Agent 3: Restaurant Reviewer';
-      const instructions = {
-        description: 'Reviewing the finished restaurant concept with clear, encouraging feedback.',
-        prompt: `You are a strict but encouraging restaurant expert. Read the approved restaurant concept and return two sections. First, a short bullet-point critique labeled Critique:, with each bullet explaining exactly what an 8–18 year old student can improve. Second, an improved final restaurant version labeled Improved Restaurant Concept:. Never use sarcasm. Return only those two sections in plain text.`
-      };
       try {
-        const text = await askAgentPersona(persona, instructions, { stage: 'review', concept: officialConcept });
-        reviewResult = parseAgent3(text);
-        // merge improved version into officialConcept for final showcase
-        try {
-          const improvedJson = tryExtractJson(reviewResult.improved);
-          if (improvedJson && improvedJson.design) {
-            officialConcept = { ...officialConcept, ...improvedJson.design, menu: improvedJson.menu || officialConcept.menu, recipes: improvedJson.recipes || officialConcept.recipes };
-          }
-        } catch (e) {
-          // ignore if improved is plain text
-        }
-        currentStage = 'final';
+        const response = await askAgentPersona(
+          agentMeta.review.persona,
+          `Review the approved restaurant concept and recipes. Return valid JSON only with critique as an array of short encouraging bullet points and improved as a full improved restaurant version matching the same schema as the restaurant designer output. Every suggestion must clearly explain what an 8–18 year old student can improve.`,
+          { stage: 'review', concept: state.official, progress: { chefLevel: state.chefLevel, creativityScore: state.creativityScore, recipeBook: state.recipeBook, reactions: state.customerReactions } },
+          'review'
+        );
+        state.review = normalizeReview(response);
+        state.official = deepClone(state.review.improved);
+        state.stage = 'final';
+        setError(null, null);
         render();
       } catch (error) {
         setError(error.message, fetchReview);
       }
     }
 
-    function parseAgent3(text) {
-      const critiqueMatch = text.match(/Critique:\s*([\s\S]*?)(?:\n\s*Improved Restaurant Concept:|$)/i);
-      const improvedMatch = text.match(/Improved Restaurant Concept:\s*([\s\S]*?)$/i);
-      const critique = critiqueMatch ? critiqueMatch[1].trim() : '';
-      const improved = improvedMatch ? improvedMatch[1].trim() : '';
-      return { critique, improved };
+    function selectIdea(index) {
+      state.selectedIdea = state.ideas[index];
+      fetchDesign(state.selectedIdea);
     }
 
-    function tryExtractJson(text) {
-      try {
-        const maybe = text.trim();
-        if (maybe.startsWith('{') || maybe.startsWith('[')) return JSON.parse(maybe);
-      } catch (e) {
-        return null;
-      }
-      return null;
-    }
-
-    // Kitchen / cooking game helpers
-    function renderKitchen(recipes) {
-      const kitchen = document.getElementById('kitchenArea');
-      if (!recipes.length) {
-        kitchen.innerHTML = `<div class="small-note">No recipes available yet. Save the official concept with recipes first.</div>`;
-        return;
-      }
-      kitchen.innerHTML = recipes.map((r, idx) => `
-        <div class="section" style="display:flex;gap:12px;align-items:flex-start;">
-          <div style="flex:1;">
-            <h3>${escapeHtml(r.name)}</h3>
-            <div><strong>Ingredients:</strong></div>
-            <div class="ingredients" data-idx="${idx}">
-              ${(r.ingredients || []).map(ing => `<div class="draggable" draggable="true" data-ingredient="${escapeHtml(ing)}" style="display:inline-block;padding:6px 10px;border-radius:999px;background:#f3f4f6;margin:6px;border:1px solid #e5e7eb;">${escapeHtml(ing)}</div>`).join('')}
-            </div>
-            <div style="margin-top:8px;"><strong>Steps:</strong><pre>${escapeHtml((r.steps || []).join('\n'))}</pre></div>
-          </div>
-          <div style="width:260px;">
-            <div style="border:1px dashed #d1d5db;border-radius:12px;padding:12px;min-height:140px;" data-dropzone-idx="${idx}">Drop ingredients here</div>
-            <div style="margin-top:8px;display:flex;gap:8px;">
-              <button class="primary" data-action="check" data-idx="${idx}">Check Recipe</button>
-              <button class="secondary" data-action="decorate" data-idx="${idx}">Decorate</button>
-            </div>
-            <div class="small-note" data-progress-idx="${idx}">Progress: 0/${(r.ingredients || []).length}</div>
-          </div>
-        </div>`).join('');
-
-      kitchen.querySelectorAll('.draggable').forEach(el => {
-        el.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/plain', el.dataset.ingredient);
-        });
-      });
-      kitchen.querySelectorAll('[data-dropzone-idx]').forEach(zone => {
-        zone.addEventListener('dragover', e => e.preventDefault());
-        zone.addEventListener('drop', e => {
-          e.preventDefault();
-          const ing = e.dataTransfer.getData('text/plain');
-          if (!ing) return;
-          const badge = document.createElement('div');
-          badge.textContent = ing;
-          badge.style.display = 'inline-block';
-          badge.style.padding = '6px 10px';
-          badge.style.margin = '6px';
-          badge.style.borderRadius = '999px';
-          badge.style.background = '#fff7ed';
-          badge.style.border = '1px solid #f3e1c0';
-          zone.appendChild(badge);
-          const idx = Number(zone.dataset.dropzoneIdx);
-          const progressEl = document.querySelector(`[data-progress-idx="${idx}"]`);
-          const count = zone.querySelectorAll('div').length;
-          progressEl.textContent = `Progress: ${count}/${(recipes[idx].ingredients || []).length}`;
-        });
-      });
-      kitchen.querySelectorAll('button[data-action="check"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.idx);
-          const zone = kitchen.querySelector(`[data-dropzone-idx="${idx}"]`);
-          const placed = Array.from(zone.querySelectorAll('div')).map(d => d.textContent.trim());
-          const needed = (recipes[idx].ingredients || []).map(i => String(i).trim());
-          const matched = needed.filter(n => placed.includes(n)).length;
-          if (matched === needed.length) {
-            chefXP += 10;
-            if (chefXP >= chefLevel * 50) { chefLevel++; chefXP = 0; }
-            alert(`Great job! You completed ${recipes[idx].name}. XP +10. Level ${chefLevel}`);
-          } else {
-            alert(`Not quite yet. You added ${matched} of ${needed.length} ingredients.`);
-          }
-        });
-      });
-      kitchen.querySelectorAll('button[data-action="decorate"]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const idx = Number(btn.dataset.idx);
-          const dec = prompt('Choose a decoration (e.g., sprinkles, fruit slice):', 'sprinkles');
-          if (dec) {
-            unlocked.decorations.add(dec);
-            alert(`Added decoration: ${dec}.`);
-          }
-        });
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
+    function resetStudio() {
+      state.stage = 'ideas';
+      state.busy = null;
+      state.error = null;
+      state.ideas = [];
+      state.selectedIdea = null;
+      state.draft = null;
+      state.official = null;
+      state.review = null;
+      state.editMode = false;
+      state.chefXp = 0;
+      state.chefLevel = 1;
+      state.creativityScore = 0;
+      state.recipeBook = [];
+      state.unlockedIngredients = new Set(['Water', 'Salt']);
+      state.unlockedDecorations = new Set();
+      state.customerReactions = [];
+      state.progress = {};
+      setError(null, null);
       render();
       fetchIdeas();
-    });
+    }
+
+    function attachInitialHandlers() {
+      render();
+      fetchIdeas();
+    }
+
+    document.addEventListener('DOMContentLoaded', attachInitialHandlers);
   </script>
 </body>
 </html>

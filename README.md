@@ -1,52 +1,15 @@
 # Restaurant-Studio-AI
-Create your dream restaurant with AI teammates! Start to End Restaurant Studio lets students ages 8–18 brainstorm restaurant ideas, design menus, create themes, and improve their concepts with three AI agents. Students stay in control by approving every step while building creative restaurants from imagination to final design.
+
+Start to End Restaurant Studio is a single-page app for students ages 8–18. It feels like a mix of a restaurant tycoon, a cooking game, and an AI creative studio. Students begin with a simple idea, work with three AI agents, edit and cook their creations, and approve every handoff before the next agent runs.
 
 ## Project Overview
 
-This standalone single-page app uses three cooperating AI agents to guide students from a simple restaurant idea to a polished final concept. The school proxy endpoint at `/classroom-proxy` handles every AI POST request, and the student approves each handoff before the next agent runs.
+The app uses one reusable async function, `askAgentPersona()`, for every AI agent call. Each request posts to `/classroom-proxy`, which makes the project easy to run locally with the included Node server stub.
 
 ## Setup Instructions
 
-1. Open `index.html` in a web browser, or run a simple local server:
-   - Python 3: `python3 -m http.server 8000`
-   - Node.js: `npx http-server .`
-2. Visit `http://localhost:8000` in your browser.
-3. Ensure the classroom proxy is available at `/classroom-proxy` for the AI agent POST requests.
-
-## How the Three Agents Work
-
-- **Agent 1: Restaurant Idea Generator**
-  - Persona: A creative restaurant brainstorming partner.
-  - Task: Generate exactly 5 restaurant concepts, each with a name, theme, and one sentence explaining why customers would love it.
-  - Output: Shows five clickable ideas and includes a "More Ideas" button to regenerate ideas.
-
-- **Agent 2: Restaurant Designer**
-  - Persona: A creative restaurant designer.
-  - Task: Take the approved idea and create a complete restaurant concept with theme, menu items, drinks, desserts, decorations, colors, layout, customer experience, special features, logo idea, and slogan.
-  - Output: Returns only the restaurant concept in a structured plain text format.
-
-- **Agent 3: Restaurant Reviewer**
-  - Persona: A strict but encouraging restaurant expert.
-  - Task: Review the approved restaurant concept and return a short bullet-point critique plus an improved final version.
-  - Output: Provides clear feedback and an improved concept, with suggestions written for an 8–18 year old student.
-
-## Approval Workflow
-
-1. On load, Agent 1 runs and displays five restaurant ideas.
-2. The student selects one idea to send to Agent 2.
-3. Agent 2 generates the restaurant concept.
-4. The student can click `Edit` to modify concept sections inline and then save the official version.
-5. After approval, the approved concept is sent to Agent 3.
-6. The final screen shows the review critique, the improved restaurant version, a copy button, and a button to start a new restaurant.
-
-## Running the App Locally
-
-The app works best when served from a local web server because it sends AI requests to `/classroom-proxy`.
-
-### Using the built-in proxy stub
-
-1. Install Node.js if needed.
-2. Install dependencies:
+1. Make sure Node.js is installed.
+2. Install the project dependencies:
    ```bash
    cd /workspaces/Restaurant-Studio-AI
    npm install
@@ -57,15 +20,46 @@ The app works best when served from a local web server because it sends AI reque
    ```
 4. Open `http://localhost:8000` in your browser.
 
-This server serves `index.html` and handles the `/classroom-proxy` requests with stubbed AI responses.
+## How the Three Agents Work
 
-### Using a simple static server instead
+- **Agent 1: Restaurant Idea Generator**
+  - Persona: A creative restaurant brainstorming partner who helps students imagine exciting restaurant concepts.
+  - Output: Exactly 5 clickable restaurant ideas with a name, theme, food style, and one sentence explaining why customers would love it.
+  - App behavior: Runs on load and can be rerun with the **More Ideas** button.
 
-If you already have a proxy available, you can use any static server:
+- **Agent 2: Chef and Restaurant Builder**
+  - Persona: A creative chef and restaurant designer who turns an idea into a complete restaurant experience.
+  - Output: Restaurant design, menu, and recipes for interactive cooking.
+  - App behavior: Runs after the student chooses an idea, then the student can edit the draft, save the official version, and complete recipes in the cooking game.
+
+- **Agent 3: Chef Critic**
+  - Persona: A strict but encouraging professional chef and restaurant expert.
+  - Output: Short bullet-point feedback and an improved final restaurant version.
+  - App behavior: Runs only after the student approves the saved restaurant version.
+
+## Approval Workflow
+
+1. The app loads and Agent 1 creates 5 restaurant ideas.
+2. The student selects one idea and sends it to Agent 2.
+3. Agent 2 creates the restaurant design, menu, recipes, and cooking game content.
+4. The student edits the draft, saves the official version, and completes recipes.
+5. The student approves the restaurant and sends it to Agent 3.
+6. Agent 3 returns feedback and an improved final showcase.
+
+## Running Locally
+
+The easiest way to run the project is with the built-in Node server stub:
+
 ```bash
 cd /workspaces/Restaurant-Studio-AI
-python3 -m http.server 8000
+npm install
+npm start
 ```
+
 Then open `http://localhost:8000`.
 
-> Note: The app expects the classroom proxy endpoint at `/classroom-proxy` to handle the AI request POSTs and return a JSON response with a `text` field. The provided `server.js` stub implements that contract.
+## Notes
+
+- The app expects the classroom proxy endpoint at `/classroom-proxy` to return JSON with a `text` field.
+- The provided `server.js` file serves the SPA and returns stubbed AI responses for all three agents.
+- If you already have your own classroom proxy, you can replace the stub while keeping the same request format.
